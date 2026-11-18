@@ -170,6 +170,25 @@
       *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
     }
 
+
+    /* Optional discover extensions — image OCR and OpenStreetMap venue discovery */
+    .image-discovery,.osm-discovery{margin-bottom:22px!important;border-radius:19px!important;padding:19px!important}
+    .discovery-eyebrow{color:var(--accent);font-weight:820;font-size:11px;letter-spacing:.11em}
+    .discovery-title{font-weight:830!important;color:var(--fg)!important;font-size:21px;margin:5px 0 9px!important;letter-spacing:-.025em}
+    .discovery-heading{font-size:14px;font-weight:800;color:var(--fg);margin:17px 0 9px}
+    .image-discovery .field{margin:13px 0}.image-discovery .field>span{font-weight:700;font-size:12px;margin-bottom:7px}
+    .probe-preview{border:1px solid var(--border);border-radius:15px;background:var(--panel2);margin:12px 0;overflow:hidden}
+    .probe-preview img{display:block;width:100%;max-height:230px;object-fit:contain}
+    .found-shop{display:flex;gap:12px;align-items:center;justify-content:space-between;background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:11px;margin:8px 0}
+    .found-shop strong{font-size:13px;font-weight:800;display:block;line-height:1.4;color:var(--fg)}
+    .found-shop small{display:block;color:var(--muted);font-size:11px;line-height:1.4;margin-top:3px}
+    .found-shop .inline-links{flex-shrink:0;gap:5px}
+    .found-shop .btn{min-height:36px;padding:6px 9px}
+    .status-line{border-left:3px solid var(--accent);background:var(--panel2);border-radius:7px;color:var(--fg);padding:11px 12px;font-size:12px;line-height:1.65;margin:15px 0}
+    .osm-list{max-height:580px;overflow:auto;scrollbar-color:var(--border) transparent}
+    .osm-discovery select{width:auto}.osm-discovery .inline-links{gap:8px}
+    .osm-discovery .hint,.image-discovery .hint{color:var(--muted);font-size:11px;line-height:1.7}
+    @media(max-width:760px){.image-discovery,.osm-discovery{padding:15px!important}.discovery-title{font-size:19px}.found-shop{flex-wrap:wrap;gap:7px}.found-shop .inline-links{width:100%;justify-content:flex-end}.osm-discovery .inline-links{flex-wrap:wrap}}
   </style>
 </head>
 <body>
@@ -205,7 +224,7 @@
     function statusOf(shop){return shop.status || (getVisits(shop.id).length?'visited':'new')}
     function setStatus(id,status){if(!getShop(id))return;store.mods[id]={...(store.mods[id]||{}),status};save();render();toast(status==='wish'?'「行きたい」に保存しました':status==='visited'?'訪問済みにしました':'ステータスを更新しました')}
     function stats(){let s=getShops(),wish=s.filter(x=>statusOf(x)==='wish'),visited=s.filter(x=>statusOf(x)==='visited');let rated=store.visits.filter(v=>Number(v.rating)>0);return {total:s.length,wish:wish.length,visited:visited.length,logs:store.visits.length,wards:new Set(visited.map(x=>x.ward)).size,avg:rated.length?(rated.reduce((a,b)=>a+Number(b.rating),0)/rated.length).toFixed(1):'-'}}
-    function mapUrl(shop){return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent('東京都 '+shop.ward+' '+shop.name)}
+    function mapUrl(shop){const coords=Number.isFinite(Number(shop.lat))&&Number.isFinite(Number(shop.lon))?shop.name+' '+Number(shop.lat).toFixed(5)+','+Number(shop.lon).toFixed(5):'東京都 '+shop.ward+' '+shop.name;return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(coords)}
     function iconNav(tab){let row=NAV.find(n=>n[0]===tab);return row?row[1]:''}
 
     // 写真はブラウザのIndexedDBに保存。JSONバックアップには画像バイナリを含めない。
@@ -317,5 +336,6 @@
     render();
     loadPhotos();
   </script>
+  <script src="./discovery.js"></script>
 </body>
 </html>
