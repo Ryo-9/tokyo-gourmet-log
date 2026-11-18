@@ -349,7 +349,9 @@
     .group-privacy-note{color:var(--muted);font-size:11px;line-height:1.7;margin:12px 0 18px;background:var(--panel2);border:1px solid var(--border);padding:12px 14px;border-radius:12px}
     .group-privacy-note strong{color:var(--fg)}
     .group-user-code,.group-guest,.group-panel,.tgl-group-detail{background:var(--panel);border:1px solid var(--border);box-shadow:var(--soft-shadow);border-radius:16px;padding:16px;margin:12px 0}
-    .group-user-code{display:flex;align-items:center;gap:10px;justify-content:space-between}
+    .group-user-code{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap}
+    .group-user-code>div:first-child{min-width:0;flex:1 1 180px}
+    .group-user-code-actions{display:flex;gap:8px;flex-wrap:wrap}
     .group-user-code small{display:block;color:var(--muted);font-size:10px;font-weight:750}
     .group-user-code strong{display:block;font-size:12px;overflow-wrap:anywhere;color:var(--fg);margin:5px 0}
     .group-user-code p,.group-guest p{font-size:11px;line-height:1.6;color:var(--muted);margin:5px 0}
@@ -369,7 +371,7 @@
     .tgl-group-invite .btn{min-height:38px;white-space:normal}
     .tgl-group-form{display:grid;gap:10px;margin:15px 0 0}
     .tgl-group-form .field{margin:0}.tgl-group-form .field>span{display:block;color:var(--fg);font-size:12px;font-weight:650;margin-bottom:6px}
-    .tgl-group-form input{width:100%;min-height:44px}
+    .tgl-group-form input,.tgl-group-form select{width:100%;min-height:44px}
     .tgl-group-form .btn{justify-self:start;min-height:43px}
     .group-form-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
     .group-subheading{display:flex;justify-content:space-between;align-items:center;gap:8px;padding-top:12px;margin-top:17px;border-top:1px solid var(--border)}
