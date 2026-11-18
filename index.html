@@ -308,6 +308,20 @@
       .map-legend{gap:8px}
     }
 
+
+    /* Optional private Supabase cloud beta, no automatic uploads */
+    #tglCloudPanel{border:1px solid var(--border);border-radius:18px;box-shadow:var(--soft-shadow)}
+    #tglCloudPanel h3{font-size:18px;letter-spacing:-.02em;font-weight:830;color:var(--fg)}
+    #tglCloudPanel p{font-size:12px;line-height:1.7;color:var(--muted)}
+    #tglCloudPanel .inline-links{display:flex;gap:7px;flex-wrap:wrap}
+    #tglCloudPanel .btn{min-height:43px}
+    #tglCloudPanel input[type=email]{width:100%;min-height:44px}
+    #tglCloudPanel .cloud-import-preview{background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:14px;margin:15px 0}
+    #tglCloudPanel .cloud-import-preview strong{color:var(--fg);font-size:13px}
+    #tglCloudPanel .cloud-import-preview p{margin:8px 0}
+    #tglCloudPanel .status-line{background:var(--panel2);color:var(--fg);border-left-color:var(--accent)}
+    @media(max-width:760px){#tglCloudPanel{padding:15px}#tglCloudPanel .inline-links .btn{flex:1;min-width:160px}}
+
   </style>
 </head>
 <body>
@@ -458,5 +472,7 @@
   <script src="./discovery.js"></script>
   <script src="./community.js"></script>
   <script src="./interactive-map.js"></script>
+  <script src="./cloud-config.js"></script>
+  <script src="./cloud-sync.js"></script>
 </body>
 </html>
