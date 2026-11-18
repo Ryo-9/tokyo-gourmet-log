@@ -29,7 +29,7 @@
   function inviteCard(inv){
     const g=state.groups.find(x=>x.id===inv.group_id);
     return '<div class="tgl-group-invite"><div><strong>'+(g?safe(g.title):'招待されたグループ')+'</strong>'+
-      '<small>'+(inv.status==='accepted'?'参加を確定してください':'招待を受け取りました')+'</small></div>'+
+      '<small>'+(inv.status==='accepted'?'参加を確定してください':'招待を受け取りました')+' · 招待者コード '+safe(inv.invited_by.slice(0,8))+'…</small></div>'+
       '<button class="btn primary" data-group="join" data-id="'+safe(inv.group_id)+'">'+(inv.status==='accepted'?'参加を確定':'参加する')+'</button>'+
       (inv.status==='pending'?'<button class="btn" data-group="decline" data-id="'+safe(inv.group_id)+'">辞退</button>':'')+
       '</div>';
@@ -66,7 +66,10 @@
         '<p class="hint">相手から受け取った「ユーザーコード」を入力してください。メールアドレスから勝手に検索はしません。</p>'+
         '<label class="field"><span>友達のユーザーコード</span><input name="inviteId" autocapitalize="off" required maxlength="36" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"></label>'+
         '<button class="btn" type="submit" '+(state.busy?'disabled':'')+'>招待を送る</button></form>':'')+
-      '</div>';
+      '<div class="group-manage-actions">'+
+      (own?'<button type="button" class="btn danger" data-group="deleteGroup" data-id="'+safe(g.id)+'">グループを削除</button>':
+      '<button type="button" class="btn danger" data-group="leaveGroup" data-id="'+safe(g.id)+'">グループを抜ける</button>')+
+      '</div></div>';
   }
   function renderPanel(){
     const logged=!!state.me;
@@ -223,6 +226,28 @@
       return own?"投票を取り消しました。":"投票しました。";
     });
   }
+  async function leaveGroup(groupId){
+    if(!state.groups.some(g=>g.id===groupId&&!isOwner(g)))return;
+    if(!confirm("このグループから退会しますか？\n候補や投票を閲覧できなくなります。"))return;
+    await run(async c=>{
+      const {error}=await c.from("tgl_group_members").delete().eq("group_id",groupId).eq("user_id",state.me.id);
+      if(error)throw Error("退会に失敗しました："+error.message);
+      const {error:invError}=await c.from("tgl_group_invitations").delete().eq("group_id",groupId).eq("invited_user_id",state.me.id);
+      if(invError)throw Error("退会は完了しましたが、招待の削除に失敗しました："+invError.message);
+      state.selected="";state.places=[];state.votes=[];
+      await loadAllAfterAction(c);return "グループから退会しました。";
+    });
+  }
+  async function deleteGroup(groupId){
+    if(!state.groups.some(g=>g.id===groupId&&isOwner(g)))return;
+    if(!confirm("本当にこのグループを削除しますか？\n招待・候補店・投票が全て削除され、元に戻せません。"))return;
+    await run(async c=>{
+      const {error}=await c.from("tgl_groups").delete().eq("id",groupId).eq("owner_id",state.me.id);
+      if(error)throw Error("削除できません："+error.message);
+      state.selected="";state.places=[];state.votes=[];
+      await loadAllAfterAction(c);return "グループを削除しました。";
+    });
+  }
   document.addEventListener("submit",ev=>{
     const form=ev.target;
     if(!["tglGroupCreateForm","tglGroupInviteForm","tglGroupCandidateForm"].includes(form?.id))return;
@@ -251,6 +276,8 @@
     if(action==="join"){void join(groupId).catch(e=>{state.error=String(e.message||e);view();});return;}
     if(action==="decline"){void decline(groupId).catch(e=>{state.error=String(e.message||e);view();});return;}
     if(action==="vote"){void vote(groupId);return;}
+    if(action==="leaveGroup"){void leaveGroup(groupId);return;}
+    if(action==="deleteGroup"){void deleteGroup(groupId);return;}
   });
   window.TGLGroups={renderPanel};
   const previousRender=render;
