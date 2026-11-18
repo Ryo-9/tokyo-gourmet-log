@@ -34,6 +34,21 @@
       (inv.status==='pending'?'<button class="btn" data-group="decline" data-id="'+safe(inv.group_id)+'">辞退</button>':'')+
       '</div>';
   }
+  // Offer local saved restaurants as input assistance only. Never upload private
+  // visits, ratings, personal notes or photos when selecting an option.
+  function savedShops(){
+    return getShops().filter(s=>s?.id&&s?.name&&["visited","wish"].includes(statusOf(s))).slice(0,100);
+  }
+  function savedShopPicker(){
+    const shops=savedShops();
+    if(!shops.length)return "";
+    return '<label class="field"><span>保存したお店から入力（任意）</span>'+
+      '<select id="tglGroupSavedShop" aria-label="保存したお店から候補を選ぶ">'+
+      '<option value="">自分の保存店を選ぶ</option>'+
+      shops.map(s=>'<option value="'+safe(s.id)+'">'+safe(s.name)+' · '+safe(s.ward||s.region||"エリア未設定")+'</option>').join("")+
+      '</select></label>'+
+      '<p class="hint">ここでは入力するだけです。「候補を追加」を押すまでグループに公開されません。</p>';
+  }
   function placesMarkup(){
     const g=activeGroup();if(!g)return "";
     const own=isOwner(g),pendingInvites=own?state.sentInvites.filter(i=>i.group_id===g.id&&i.status==="pending"):[],votedById=new Map();
@@ -57,6 +72,7 @@
       }).join(""):'<p class="hint">候補はまだありません。最初のお店を登録しましょう。</p>')+
       '<form class="tgl-group-form" id="tglGroupCandidateForm" data-id="'+safe(g.id)+'">'+
       '<div class="group-subheading"><strong>お店を候補に追加</strong></div>'+
+      savedShopPicker()+
       '<label class="field"><span>店名</span><input name="placeName" required maxlength="160" placeholder="例：つけ麺 道"></label>'+
       '<div class="group-form-pair"><label class="field"><span>区・エリア</span><input name="placeArea" maxlength="100" placeholder="例：葛飾区"></label>'+
       '<label class="field"><span>料理ジャンル</span><input name="placeCuisine" maxlength="80" placeholder="例：ラーメン"></label></div>'+
@@ -86,7 +102,8 @@
       '<button class="btn primary" data-tab="data">設定でログインする</button></div>':
       '<div class="group-user-code"><div><small>自分のユーザーコード</small><strong>'+safe(state.me.id)+'</strong>'+
       '<p>友達から招待してもらう場合は、このコードを相手に送ってください。メールや位置情報は含みません。</p></div>'+
-      '<button class="btn" data-group="copyId">コピー</button></div>'+
+      '<div class="group-user-code-actions"><button class="btn" data-group="shareId">友達に送る</button>'+
+      '<button class="btn" data-group="copyId">コピー</button></div></div>'+
       (pending.length?'<div class="group-panel"><h3>届いた招待</h3>'+pending.map(inviteCard).join("")+'</div>':'')+
       '<div class="group-panel"><h3>参加しているグループ</h3>'+
       (state.groups.length?state.groups.map(groupCard).join(""):'<p class="hint">まだグループがありません。新しく作成できます。</p>')+'</div>'+
@@ -287,6 +304,27 @@
       await loadAllAfterAction(c);return "グループを削除しました。";
     });
   }
+  document.addEventListener("change",ev=>{
+    if(ev.target?.id!=="tglGroupSavedShop")return;
+    const form=ev.target.closest("form");
+    if(form?.id!=="tglGroupCandidateForm")return;
+    const selected=savedShops().find(s=>String(s.id)===ev.target.value);
+    if(!selected)return;
+    // Explicit form submission is the only operation that shares the chosen name,
+    // area and genre with a group. Never copy private visit data or notes.
+    form.elements.placeName.value=String(selected.name||"").slice(0,160);
+    form.elements.placeArea.value=String(selected.ward||selected.region||"").slice(0,100);
+    form.elements.placeCuisine.value=String(selected.genre||"").slice(0,80);
+    toast("店名・エリア・ジャンルを入力しました。内容を確認して候補を追加してください。");
+  });
+  function copyUserCode(){
+    if(!state.me)return;
+    const code=state.me.id;
+    if(navigator.clipboard?.writeText){
+      void navigator.clipboard.writeText(code).then(()=>toast("ユーザーコードをコピーしました"))
+        .catch(()=>window.prompt("コードをコピーしてください",code));
+    }else window.prompt("コードをコピーしてください",code);
+  }
   document.addEventListener("submit",ev=>{
     const form=ev.target;
     if(!["tglGroupCreateForm","tglGroupInviteForm","tglGroupCandidateForm"].includes(form?.id))return;
@@ -298,10 +336,17 @@
   document.addEventListener("click",ev=>{
     const b=ev.target.closest("[data-group]");if(!b)return;
     const action=b.dataset.group,groupId=b.dataset.id;
-    if(action==="copyId"){
+    if(action==="copyId"){copyUserCode();return;}
+    if(action==="shareId"){
       if(!state.me)return;
-      navigator.clipboard.writeText(state.me.id).then(()=>toast("ユーザーコードをコピーしました"))
-        .catch(()=>window.prompt("コードをコピーしてください",state.me.id));return;
+      const text="TOKYO GOURMET LOG の招待用ユーザーコード\n"+state.me.id+
+        "\n※店の訪問履歴・メモ・写真・現在地は含まれません。";
+      if(typeof navigator.share==="function"){
+        void navigator.share({title:"TOKYO GOURMET LOG",text}).catch(err=>{
+          if(err?.name!=="AbortError")copyUserCode();
+        });
+      }else copyUserCode();
+      return;
     }
     if(action==="maps"){
       const place=state.places.find(p=>p.id===groupId);if(!place)return;
