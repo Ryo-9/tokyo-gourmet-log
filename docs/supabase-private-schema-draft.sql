@@ -39,12 +39,14 @@ create table if not exists public.tgl_saved_places (
   constraint tgl_places_client_id_length check (char_length(client_id) between 1 and 160),
   constraint tgl_places_text_length check (char_length(note) <= 4000),
   constraint tgl_places_latitude_range check (lat is null or (lat between -90 and 90)),
-  constraint tgl_places_longitude_range check (lon is null or (lon between -180 and 180))
+  constraint tgl_places_longitude_range check (lon is null or (lon between -180 and 180)),
+  constraint tgl_places_location_complete check ((lat is null) = (lon is null))
 );
 
 create table if not exists public.tgl_visits (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
+  client_id text not null,
   place_id uuid not null,
   visited_on date not null,
   rating smallint check (rating between 1 and 5),
@@ -55,6 +57,8 @@ create table if not exists public.tgl_visits (
   created_at timestamptz not null default now(),
   constraint tgl_visit_dish_length check (char_length(dish) <= 150),
   constraint tgl_visit_note_length check (char_length(note) <= 5000),
+  unique (user_id, client_id),
+  constraint tgl_visits_client_id_length check (char_length(client_id) between 1 and 160),
   constraint tgl_visits_place_ownership foreign key (user_id, place_id)
       references public.tgl_saved_places(user_id, id) on delete cascade
 );
@@ -75,6 +79,7 @@ create table if not exists public.tgl_posts (
   constraint tgl_post_caption_length check (char_length(caption) <= 2000)
 );
 
+-- Client IDs are stable browser identifiers. Re-import/upsert must not duplicate visits.
 create index if not exists tgl_saved_places_user_status on public.tgl_saved_places(user_id, status);
 create index if not exists tgl_visits_user_date on public.tgl_visits(user_id, visited_on desc);
 create index if not exists tgl_posts_user_created on public.tgl_posts(user_id, created_at desc);
