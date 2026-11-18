@@ -1,6 +1,6 @@
 /* TOKYO GOURMET LOG — private-first sharing & moments
    GitHub Pages has no server. Share links are snapshots, votes are local replies.
-   There is no public feed, account system, or real-time group sync. */
+   This local list-sharing mode needs no login; online invite-only groups use Supabase. */
 (function () {
   "use strict";
   const KEY="tgl-sharing-v1";
@@ -131,7 +131,7 @@
     '<p class="muted">友達が送ってきたこのアプリのリストURLを開くと、相手の候補が表示されます。手動で貼ることもできます。</p>'+
     '<div class="inline-links"><input id="hubLinkIn" inputmode="url" placeholder="https://ryo-9.github.io/.../#list=..." aria-label="共有リストURL" style="flex:1;min-width:170px">'+
     '<button class="btn" data-action="hubReadLink">リンクを表示</button></div></div>'+
-    '<div class="share-note"><strong>公開フィードについて：</strong>この版にはアカウントやサーバーがありません。全国のユーザー投稿・リアルタイムチャット・グループ投票集計はまだ利用できません。SNSに公開したURLを見た人がリストを開く仕組みです。</div>'+
+    '<div class="share-note"><strong>公開フィードについて：</strong>この画面はログイン不要のリンク共有です。オンラインの招待制グループは上の「グループ」から利用できます。全国のユーザー投稿・公開フィード・リアルタイムチャットはまだ未実装です。</div>'+
     '</section>';
   }
   function pickerHtml(shops){
