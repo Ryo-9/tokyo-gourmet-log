@@ -65,3 +65,12 @@ TikTok / Instagram / 画像 / リンク / 地図 / 自分の記録 / 友達 / �
 - https://operations.osmfoundation.org/policies/nominatim/
 - https://supabase.com/pricing
 - https://supabase.com/docs/guides/database/postgres/row-level-security
+
+## Supabase連携状況（2026-11-18）
+
+- Supabaseアカウントの接続を確認。
+- 所有プロジェクト「Ryo-9's Project」（東京リージョン ap-northeast-1）は現在 INACTIVE、組織プランは free。以前の用途やデータはまだ確認できていない。
+- 休止中のプロジェクトは再開・テーブル確認をまだ行っていない。既存データを上書きしないため、ユーザーからどのプロジェクトを本アプリ用に使うかの意思確認後に進める。
+- docs/supabase-private-schema-draft.sql に初期スキーマのドラフトを作成（GitHubに保存済み、Supabaseには**未適用**）。本人のみ読めるプロフィール・保存店舗・訪問履歴・投稿のRLSを初期設定。投稿は public と指定しても他ユーザーから見えず、公開ポリシー・通報・ブロック・画面の同意設計が完了するまではSNS公開を無効化。
+- 将来の導入順：1) 承認済みプロジェクトでテーブルの事前調査、2) スキーマ適用とRLSテスト、3) マジックリンク認証、4) ローカルJSONのバックアップ後に明示的なインポート・差分プレビュー、5) 自分の記録をクラウドに同期、6) 投稿やフォローなどの公開権限を慎重に追加。
+- このGitHub Pagesに service_role/secret keys を置かない。設定する場合も public publishable key のみ。
