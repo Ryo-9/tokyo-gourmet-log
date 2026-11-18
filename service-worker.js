@@ -1,4 +1,4 @@
-const CACHE='tgy-gourmet-6-6-editorial-20261119';
+const CACHE='tgy-gourmet-6-7-mapfeed-20261119';
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./','./index.html','./icon.svg','./manifest.webmanifest','./discovery.js','./community.js','./interactive-map.js','./cloud-config.js','./cloud-sync.js','./online-groups.js']))));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))));
 self.addEventListener('fetch',event=>{const request=event.request;if(request.method!=='GET')return;const u=new URL(request.url);if(u.origin!==self.location.origin)return;event.respondWith(fetch(request).then(res=>{if(res.ok){const clone=res.clone();caches.open(CACHE).then(c=>c.put(request,clone));}return res}).catch(()=>caches.match(request).then(x=>x||caches.match('./index.html'))));});
