@@ -8,22 +8,22 @@
 - Project ref: `uqcwtixittdrktziszab`
 - Project URL: `https://uqcwtixittdrktziszab.supabase.co`
 - Region: ap-northeast-1 / 無料組織
-- 2026-11-18 プロジェクト再開をユーザーが許可。restore_project 成功。作業時は RESTORING。既存テーブルの読み取り完了前にSQLを適用しない。
-- SQLドラフト: `docs/supabase-private-schema-draft.sql`。テーブル名は `tgl_*` で既存サービスと衝突しないよう配慮。
+- 2026-11-18 ユーザー許可後にプロジェクトを再開し、ACTIVE_HEALTHYを確認済み。既存の音楽用4テーブル（profiles / songs / song_members / messages、全て空、RLS有効）は変更しなかった。
+- データベース変更は適用済み。migration: 20261118082615 tokyo_gourmet_log_private_foundation。ソース: `docs/supabase-private-schema-draft.sql`。4つのtGL専用テーブルと16ポリシーを確認。
 - GitHub Pages の本番 UI: `https://ryo-9.github.io/tokyo-gourmet-log/`
 
-## 再開完了後の順序
+## 実施結果と残る作業
 
-1. `get_project.status=ACTIVE_HEALTHY` を確認。
-2. `list_tables(schemas=['public'], verbose=true)` と `list_migrations` で既存データを点検。既存のテーブル・行を削除しない。
-3. `tgl_*` が既存にあれば勝手に変更せずスキーマを比較し、適合しなければ停止する。
-4. 既存と名前の衝突がないと確認したら、ドラフトを検査して適用。4表、4件のRLS有効化、16件の個人専用ポリシーが期待値。
-5. `get_advisors(type=security)`、`pg_class`、`pg_policies`、`information_schema.role_table_grants` で監査。PostgreSQL のRLSテスト用に anon ロールが読めないか、異なるユーザーIDが見えないか、投稿の public 表示が非公開のままかを確認。
+1. 【完了】`get_project.status=ACTIVE_HEALTHY` を確認。
+2. 【完了】`list_tables(schemas=['public'], verbose=true)` と `list_migrations` で既存データを点検。既存のテーブル・行は削除していない。
+3. 【完了】`tgl_*` は適用前に存在せず、名前の衝突なし。
+4. 【完了】4表を作成、全4表でRLS有効、各表4ポリシー＝合計16を検査した。anonロールのSELECT権限は全4表でfalse。
+5. 【一部完了】`get_advisors(type=security)`、`pg_class`、`pg_policies`、`information_schema.role_table_grants` で監査。anonの権限なし、本人のauth.uid限定のRLSを検査済み。異なるログインユーザー間の実機APIテストは未実施。以前から存在する音楽用関数 `public.add_owner_as_song_member()` の SECURITY DEFINER 警告と、漏えいパスワード保護未設定の警告は残るため別途対処。
 6. 見知らぬ本番データには触らず、テストレコードを用いる場合は独立して後で削除する。テスト時に本人のメールアドレスは不要。
-7. 認証URL: Supabase dashboard > Authentication > URL Configuration > Site URL と Redirect URLs に `https://ryo-9.github.io/tokyo-gourmet-log/` を登録する。UIログインを公開する前に設定を確認。
+7. 【ユーザー操作が必要】認証URL: Supabase dashboard > Authentication > URL Configuration > Site URL と Redirect URLs に `https://ryo-9.github.io/tokyo-gourmet-log/` を登録する。UIログインを公開する前に設定を確認。
 8. フロントエンドの public publishable key (`sb_publishable_...`) のみを利用。秘密キー/service_role を GitHub / static JS / localStorage に置かない。
-9. 最初は **明示的に選択したユーザー** のみ同期機能を使う。現地端末のlocalStorage/IndexedDBは変更せず、事前にバックアップを促す。写真のクラウド保存は別段階。
-10. まずは1ユーザーで認証→空の状態→個人の保存店・訪問履歴をアップロード→再取得→件数と所有権を比較。別ユーザーから読めないことを検証してから有効化する。
+9. 【未実施】最初は **明示的に選択したユーザー** のみ同期機能を使う。現地端末のlocalStorage/IndexedDBは変更せず、事前にバックアップを促す。写真のクラウド保存は別段階。
+10. 【未実施】まずは1ユーザーで認証→空の状態→個人の保存店・訪問履歴をアップロード→再取得→件数と所有権を比較。別ユーザーから読めないことを検証してから有効化する。
 
 ## 個人投稿と公開SNSの境界
 
@@ -50,3 +50,8 @@ where table_schema='public' and table_name like 'tgl_%'
 and grantee in ('anon','authenticated')
 order by table_name, grantee, privilege_type;
 ```
+
+## staged client
+
+- `staging/cloud-sync.js` は端末内データを変更せず、ユーザーの明示操作でJSONバックアップ→クラウドへアップロードする試作実装。**本番のindex.htmlからは読み込んでいない**。
+- AuthのリダイレクトURLとメール認証が確認できるまで、本番画面へ接続しない。後からアップロードを繰り返してもclient_idで重複しない設計。写真のアップロードとクラウドから端末への自動マージは未実装。
