@@ -32,3 +32,5 @@ jobs:
         run: node --test scripts/group-ux.test.mjs
       - name: Validate responsive home, five-tab navigation and inline scripts
         run: node --test scripts/mobile-home.test.mjs
+      - name: Check editorial design and readable mobile controls
+        run: node --test scripts/editorial-ui.test.mjs
