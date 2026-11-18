@@ -1,0 +1,21 @@
+{
+  "name": "tokyo-gourmet-log",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TOKYO GOURMET LOG: GitHub Pages PWA and experimental Capacitor iOS shell",
+  "type": "module",
+  "scripts": {
+    "build:ios-web": "node scripts/build-mobile.mjs",
+    "test:ios-web": "node --test scripts/build-mobile.test.mjs",
+    "ios:add": "npm run build:ios-web && npx cap add ios",
+    "ios:sync": "npm run build:ios-web && npx cap sync ios",
+    "ios:open": "npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "8.5.0",
+    "@capacitor/ios": "8.5.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.0"
+  }
+}

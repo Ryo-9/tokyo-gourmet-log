@@ -22,3 +22,5 @@ jobs:
           done
       - name: Verify app assets and privacy invariants
         run: node scripts/check-invariants.mjs
+      - name: Build iOS-ready local web assets and run smoke tests
+        run: node --test scripts/build-mobile.test.mjs
