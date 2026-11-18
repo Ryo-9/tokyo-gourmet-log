@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, rmSync, copyFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, copyFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
@@ -10,7 +10,7 @@ const dist = join(root, "dist");
 const files = [
   "index.html", "icon.svg", "manifest.webmanifest", "service-worker.js",
   "discovery.js", "community.js", "interactive-map.js",
-  "cloud-config.js", "cloud-sync.js", "online-groups.js"
+  "cloud-config.js", "cloud-sync.js", "online-groups.js", "native-auth.js"
 ];
 
 const config = readFileSync(join(root, "cloud-config.js"), "utf8");
@@ -23,5 +23,11 @@ for (const name of files) {
 if (existsSync(dist)) rmSync(dist, { recursive: true, force: true });
 mkdirSync(dist, { recursive: true });
 for (const name of files) copyFileSync(join(root, name), join(dist, name));
+const indexPath=join(dist,"index.html");
+const index=readFileSync(indexPath,"utf8");
+const anchor='<script src="./cloud-sync.js"></script>';
+if(!index.includes(anchor))throw new Error("Cloud sync load point not found in iOS bundle.");
+// Native auth must run before cloud-sync.js. Never add this to the public GitHub Pages index.
+writeFileSync(indexPath,index.replace(anchor,'<script src="./native-auth.js"></script>\n  '+anchor));
 console.log("Created Capacitor web bundle: " + files.length + " public assets.");
 console.log("iOS app generation / signing still requires Xcode on a Mac.");
