@@ -4,7 +4,7 @@ import vm from "node:vm";
 import { readFileSync } from "node:fs";
 
 const html=readFileSync(new URL("../index.html",import.meta.url),"utf8");
-const scriptBlocks=[...html.matchAll(/<script(?:\\s+[^>]*)?>([\\s\\S]*?)<\\/script>/g)].map(m=>m[1]);
+const scriptBlocks=[...html.matchAll(/<script(?:\s+[^>]*)?>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
 function section(begin,end) {
   const start=html.indexOf(begin);
   const finish=html.indexOf(end,start+begin.length);
@@ -18,9 +18,9 @@ test("all inline application scripts are valid JavaScript",()=>{
 });
 
 test("bottom bar uses five accessible icon tabs with an active-page indicator",()=>{
-  assert.match(html,/const NAV=\\[\\['explore','home','ホーム'\\]/);
-  assert.match(html,/grid-template-columns:repeat\\(5,minmax\\(0,1fr\\)\\)!important/);
-  assert.match(html,/env\\(safe-area-inset-bottom\\)/);
+  assert.match(html,/const NAV=\[\['explore','home','ホーム'\]/);
+  assert.match(html,/grid-template-columns:repeat\(5,minmax\(0,1fr\)\)!important/);
+  assert.match(html,/env\(safe-area-inset-bottom\)/);
   assert.match(html,/min-height:70px!important/);
   const navFn=section("function renderNav(){","function pageHeader");
   const elems={sideNav:{innerHTML:""},bottomNav:{innerHTML:""}};
@@ -62,8 +62,8 @@ test("home begins with an accessible visual search and three primary actions",()
   assert.match(home,/data-tab="sns"/);
   assert.match(home,/data-action="discover"/);
   assert.ok(home.indexOf("home-search")<home.indexOf("home-action-grid"));
-  assert.match(home,/12<small>軒<\\/small>/);
-  assert.match(home,/7<small>軒<\\/small>/);
+  assert.match(home,/12<small>軒<\/small>/);
+  assert.match(home,/7<small>軒<\/small>/);
 });
 
 test("home genre tiles are interactive and use the true underlying genre",()=>{
@@ -79,8 +79,8 @@ test("advanced filters can stay expanded through subsequent renders",()=>{
   assert.match(home,/aria-expanded="true" aria-controls="homeExtraFilters"/);
   assert.match(home,/id="testAdvancedFilters"/);
   assert.match(home,/name="homeKeyword" type="search" value="東京"/);
-  assert.match(html,/if\\(e.target.id==='homeSearchForm'\\)/);
-  assert.match(html,/if\\(a==='toggleFilters'\\)/);
+  assert.match(html,/if\(e.target.id==='homeSearchForm'\)/);
+  assert.match(html,/if\(a==='toggleFilters'\)/);
 });
 
 test("search output escapes untrusted text and preserves manual-only private data",()=>{
