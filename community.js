@@ -6,7 +6,7 @@
   const KEY="tgl-sharing-v1";
   const state={collections:[], ballots:{}, received:[]};
   let draft={title:"",description:"",selected:[],lookup:""};
-  let incoming=null, momentFile=null, momentPreview=null, sharedStatus="";
+  let incoming=null, momentFile=null, momentPreview=null, sharedStatus="", hubView="lists";
   const CATEGORIES={};
   const clean=v=>String(v??"").trim().slice(0,600);
   const e=v=>esc(String(v??""));
@@ -62,7 +62,7 @@
     if(!hash.startsWith("#list="))return;
     try{incoming=decode(hash.slice(6));sharedStatus="共有リストを受信しました。保存はまだされていません。";}
     catch{incoming=null;sharedStatus="共有リンクを読み込めませんでした。";}
-    try{if(typeof ui!=="undefined")ui.tab="sns"}catch{}
+    try{if(typeof ui!=="undefined"){ui.tab="sns";hubView="lists"}}catch{}
   }
   receiveHash();
   window.addEventListener("hashchange",()=>{receiveHash();render();});
@@ -161,7 +161,7 @@
       if(!hash.startsWith("#list="))throw Error("共有リストが付いたURLではありません");
       incoming=decode(hash.slice(6));
       sharedStatus="共有リストを受け取りました。保存するか内容を選んでください。";
-      ui.tab="sns";render();
+      ui.tab="sns";hubView="lists";render();
     }catch(err){toast(err.message||"URLを読み取れませんでした");}
   }
   function resolveList(key){
@@ -210,11 +210,16 @@
     }catch(err){toast(err.message||"取り込みに失敗しました");}
   }
   const originalSocialPage=socialPage;
-  socialPage=function(){return hubHtml()+originalSocialPage();};
+  function hubTabs(){
+    const items=[["lists","友達と共有"],["moment","今日のひと皿"],["clips","SNSクリップ"]];
+    return '<div class="hub-tabs" role="group" aria-label="つながる機能">'+
+      items.map(x=>'<button class="'+(hubView===x[0]?'active':'')+'" data-action="hubView" data-view="'+x[0]+'">'+x[1]+'</button>').join("")+'</div>';
+  }
+  socialPage=function(){return hubTabs()+(hubView==="moment"?momentCard():hubView==="clips"?originalSocialPage():hubHtml());};
   const originalExplore=explore;
   explore=function(){
-    const original=originalExplore();
-    return original.replace('<h2 class="home-title">','<div class="share-home-cta"><div><strong>友達と、次のお店を決めよう。</strong><small>気になる店を集めて、グループにシェア</small></div><button class="btn primary" data-tab="sns">リストを共有 ↗</button></div><h2 class="home-title">');
+    const original=originalExplore().replace('class="action-tile coral" data-tab="sns"','class="action-tile coral" data-tab="sns" data-action="hubShowClips"');
+    return original.replace('<h2 class="home-title">','<div class="share-home-cta"><div><strong>友達と、次のお店を決めよう。</strong><small>気になる店を集めて、グループにシェア</small></div><button class="btn primary" data-tab="sns" data-action="hubShowLists">リストを共有 ↗</button></div><h2 class="home-title">');
   };
   const originalDataPage=dataPage;
   dataPage=function(){return originalDataPage()+'<div class="panel" style="margin-top:16px"><h3>共有コレクションのバックアップ</h3><p>店舗・訪問記録のJSONとは別の保存領域です。グループで作ったリストの引き継ぎに利用します。</p><div class="inline-links"><button class="btn" data-action="hubExport">コレクションを書き出す</button><label class="btn" style="position:relative;cursor:pointer">コレクションを取り込む<input id="hubImportFile" type="file" accept=".json,application/json" hidden></label></div></div>';};
@@ -232,17 +237,6 @@
       '<button class="btn primary" data-action="hubMomentShare">シェア画像を作る</button>'+
       '<p class="hint">写真の自動アップロードはありません。画像を実際に送信するかどうかは自分で選べます。</p></section>';
   }
-  // Show under the share hub, before SNS clip forms.
-  const withMoment=socialPage;
-  socialPage=function(){return withMoment().replace('</section><div class="top">',''+momentCard()+'</section><div class="top">');};
-  // The social page's actual first element after hub is a .top. If layout changes,
-  // ensure the moment card is injected after the share hub without duplicating it.
-  const withMomentSafe=socialPage;
-  socialPage=function(){
-    const html=withMomentSafe();
-    if(html.includes('class="moment-panel"'))return html;
-    return html.replace('</section>','</section>'+momentCard());
-  };
   async function shareMoment(){
     const shop=getShop(document.getElementById("hubMomentShop")?.value||"");
     if(!shop){toast("お店を選んでください");return;}
@@ -297,6 +291,9 @@
   document.addEventListener("click",async event=>{
     const b=event.target.closest("[data-action]");if(!b)return;
     const a=b.dataset.action;
+    if(a==="hubView"){hubView=b.dataset.view||"lists";render();return;}
+    if(a==="hubShowClips"){hubView="clips";render();return;}
+    if(a==="hubShowLists"){hubView="lists";render();return;}
     if(a==="hubAdd"){
       syncDraft();if(draft.selected.length>=12)return toast("共有リストは12店舗までです");
       if(!draft.selected.includes(b.dataset.id))draft.selected.push(b.dataset.id);
