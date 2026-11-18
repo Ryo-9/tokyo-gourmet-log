@@ -693,69 +693,100 @@
     function resultsView(){let a=filtered(), shown=a.slice(0,ui.page*ui.perPage);return `<div id="results"><div class="section-title"><h2>${ui.tab==='wishlist'?'行きたいリスト':ui.tab==='visited'?'訪問済みのお店':'お店を見つける'} <small>${a.length}件</small></h2><span class="chip">${shown.length} / ${a.length} 表示</span></div>${a.length?`<div class="list-grid">${shown.map(card).join('')}</div>${shown.length<a.length?`<div style="text-align:center;margin:24px 0"><button class="btn" data-action="loadMore">さらに表示（残り${a.length-shown.length}件）</button></div>`:''}`:`<div class="big-empty"><strong>該当するお店がありません</strong>条件を変更するか、別のキーワードを試してください。<div style="margin-top:14px"><button class="btn tiny" data-action="clearFilters">絞り込み解除</button></div></div>`}`}
     function cardsView(){return filters()+resultsView()}
     function explore(){
-     const s=stats();
-     const categories=[
-      ["麺・ラーメン","ramen","ラーメン"],
-      ["カフェ・甘味","coffee","カフェ"],
-      ["洋食・バーガー","burger","洋食"],
-      ["焼肉","meat","焼肉"],
-      ["カレー・エスニック","curry","カレー"],
-      ["スイーツ・甘味","cake","スイーツ"]
-     ].filter(x=>GENRES.includes(x[0]));
-     return `<div class="home-hub">
-       <section class="home-hero" aria-labelledby="homeTitle">
-         <div class="home-hero-head"><span class="home-brand">TOKYO <strong>GOURMET LOG</strong></span><button type="button" class="home-settings" data-tab="data" aria-label="設定を開く">⚙</button></div>
-         <div class="home-hero-copy">
-           <span class="home-kicker">あなたの東京、あなたのおいしい。</span>
-           <h1 id="homeTitle">今日、<br>何食べる？</h1>
-           <p>お店探しも、食べた記録も、ここから。</p>
-         </div>
-         <div class="home-illustration" aria-hidden="true">${navIcon("utensils")}</div>
-         <form id="homeSearchForm" class="home-search" role="search">
-           <label class="sr-only" for="homeKeyword">店名・料理・エリアを検索</label>
-           <span class="home-search-icon" aria-hidden="true">${navIcon("search")}</span>
-           <input id="homeKeyword" name="homeKeyword" type="search" value="${esc(ui.keyword)}" placeholder="店名・料理・エリアで探す" autocomplete="off">
-           <button type="submit" aria-label="検索する">検索</button>
-         </form>
-       </section>
-       <section class="home-start" aria-label="すぐに使う">
-         <div class="home-section-head"><h2>どう探す？</h2></div>
-         <div class="home-action-grid">
-           <button type="button" class="home-action home-action-map" data-tab="mapsearch">
-             <span class="home-action-icon" aria-hidden="true">${navIcon("map")}</span><strong>近くで探す</strong><small>地図から発見</small>
-           </button>
-           <button type="button" class="home-action home-action-social" data-tab="sns">
-             <span class="home-action-icon" aria-hidden="true">${navIcon("users")}</span><strong>つながる</strong><small>友達・SNS</small>
-           </button>
-           <button type="button" class="home-action home-action-random" data-action="discover">
-             <span class="home-action-icon" aria-hidden="true">${navIcon("compass")}</span><strong>おまかせ</strong><small>いつもと違う一軒</small>
-           </button>
-         </div>
-       </section>
-       <section class="home-metrics" aria-label="自分のグルメ記録">
-         <button type="button" data-tab="wishlist" class="home-metric">
-           <span class="home-metric-icon" aria-hidden="true">${navIcon("heart")}</span>
-           <span class="home-metric-copy"><strong>${s.wish}<small>軒</small></strong><span>行きたいお店</span></span><span class="home-metric-arrow" aria-hidden="true">›</span>
-         </button>
-         <button type="button" data-tab="visited" class="home-metric">
-           <span class="home-metric-icon visited" aria-hidden="true">${navIcon("check")}</span>
-           <span class="home-metric-copy"><strong>${s.visited}<small>軒</small></strong><span>行ったお店</span></span><span class="home-metric-arrow" aria-hidden="true">›</span>
-         </button>
-       </section>
-       <section class="home-cuisines" aria-labelledby="homeCuisineTitle">
-         <div class="home-section-head"><h2 id="homeCuisineTitle">料理から探す</h2><button type="button" class="home-all-genres" data-action="genreChip" data-genre="all">すべて見る ›</button></div>
-         <div class="home-cuisine-grid">${categories.map(([id,icon,label])=>
-           `<button type="button" class="home-cuisine-item ${ui.genre===id?"selected":""}" data-action="genreChip" data-genre="${esc(id)}" aria-pressed="${ui.genre===id}">
-             <span class="home-cuisine-icon" aria-hidden="true">${navIcon(icon)}</span><strong>${label}</strong></button>`).join("")}</div>
-       </section>
-       <section class="home-find" aria-labelledby="homeFindTitle">
-         <div class="home-section-head home-find-head"><h2 id="homeFindTitle">お店を見つける</h2>
-           <button type="button" id="homeFiltersToggle" class="home-filter-toggle" data-action="toggleFilters" aria-expanded="${ui.filtersOpen}" aria-controls="homeExtraFilters">${navIcon("search")} 詳細検索 ${ui.filtersOpen?"−":"＋"}</button></div>
-         <div id="homeExtraFilters" ${ui.filtersOpen?"":'hidden'}>${ui.filtersOpen?filters():""}</div>
-         ${resultsView()}
-       </section>
-       <p class="home-disclaimer">料理アイコンはジャンルの目印です。営業時間や価格は訪問前にご確認ください。</p>
-     </div>`;
+      const all=getShops(),s=stats();
+      const unvisited=all.filter(x=>statusOf(x)==="new");
+      const day=new Date(),offset=day.getFullYear()*372+day.getMonth()*31+day.getDate();
+      const pick=(unvisited.length?unvisited:all)[offset%(unvisited.length||all.length||1)]||null;
+      const saved=all.filter(x=>statusOf(x)==="wish").slice(0,8);
+      const myVisits=store.visits.slice().sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))).slice(0,20);
+      const recent=[],seen=new Set();
+      for(const v of myVisits){
+        const shop=getShop(v.shopId);
+        if(shop&&!seen.has(shop.id)){recent.push({shop,date:v.date});seen.add(shop.id);}
+        if(recent.length>=6)break;
+      }
+      const categories=[
+        ["麺・ラーメン","ramen","ラーメン"],["カフェ・甘味","coffee","カフェ"],
+        ["洋食・バーガー","burger","洋食"],["焼肉","meat","焼肉"],
+        ["カレー・エスニック","curry","カレー"],["スイーツ・甘味","cake","スイーツ"]
+      ].filter(([id])=>GENRES.includes(id));
+      function smallCard(shop,sub){
+        return `<button type="button" class="feed-small-card" data-action="detail" data-id="${esc(shop.id)}" aria-label="${esc(shop.name)}の詳細を見る">
+          ${photoVisual(shop,"feed-small")}
+          <span class="feed-small-info"><strong>${esc(shop.name)}</strong><small>${esc(sub||shop.ward||"エリア未設定")}</small></span>
+        </button>`;
+      }
+      return `<div class="home-hub home-feed">
+        <section class="home-hero" aria-labelledby="homeTitle">
+          <div class="home-hero-head"><span class="home-brand">TOKYO <strong>GOURMET LOG</strong></span>
+            <button type="button" class="home-settings" data-tab="data" aria-label="設定とバックアップを開く">⚙</button></div>
+          <div class="home-hero-copy"><span class="home-kicker">気になる一軒を、見つけよう。</span>
+            <h1 id="homeTitle">今日は、どこへ？</h1></div>
+          <form id="homeSearchForm" class="home-search" role="search">
+            <label class="sr-only" for="homeKeyword">店名・料理・エリアを検索</label>
+            <span class="home-search-icon" aria-hidden="true">${navIcon("search")}</span>
+            <input id="homeKeyword" name="homeKeyword" type="search" value="${esc(ui.keyword)}" placeholder="お店・料理・エリアを検索" autocomplete="off">
+            <button type="submit" aria-label="検索する">探す</button>
+          </form>
+        </section>
+        <section class="feed-spotlight" aria-labelledby="feedSpotTitle">
+          <div class="home-section-head"><h2 id="feedSpotTitle">今日の一軒</h2><span class="feed-caption">登録店からひとつ</span></div>
+          ${pick?`<article class="feed-feature">
+            <button type="button" class="feed-feature-visual" data-action="detail" data-id="${esc(pick.id)}" aria-label="${esc(pick.name)}の詳細を開く">${photoVisual(pick,"feed-large")}</button>
+            <div class="feed-feature-body">
+              <span class="feed-feature-meta">${esc(pick.ward)} · ${esc(pick.genre)}</span>
+              <h3>${esc(pick.name)}</h3>
+              <div class="feed-feature-actions">
+                <button type="button" class="btn primary" data-action="wish" data-id="${esc(pick.id)}">${statusOf(pick)==="wish"?"保存済み":"行きたいに保存"}</button>
+                <button type="button" class="btn" data-action="detail" data-id="${esc(pick.id)}">お店を見る</button>
+              </div>
+            </div>
+          </article>`:'<p class="hint">登録されている店舗はまだありません。</p>'}
+        </section>
+        <section class="home-start" aria-label="次の操作">
+          <div class="home-section-head"><h2>どう探す？</h2></div>
+          <div class="home-action-grid">
+            <button type="button" class="home-action home-action-map" data-tab="mapsearch">
+              <span class="home-action-icon" aria-hidden="true">${navIcon("map")}</span><strong>地図から探す</strong><small>街の中から発見</small></button>
+            <button type="button" class="home-action home-action-social" data-tab="sns">
+              <span class="home-action-icon" aria-hidden="true">${navIcon("users")}</span><strong>友達・SNS</strong><small>おすすめを共有</small></button>
+            <button type="button" class="home-action home-action-random" data-action="discover">
+              <span class="home-action-icon" aria-hidden="true">${navIcon("compass")}</span><strong>おまかせ</strong><small>知らない一軒へ</small></button>
+          </div>
+        </section>
+        <section class="home-cuisines" aria-labelledby="homeCuisineTitle">
+          <div class="home-section-head"><h2 id="homeCuisineTitle">料理から探す</h2>
+            <button type="button" class="home-all-genres" data-action="genreChip" data-genre="all">すべて見る ›</button></div>
+          <div class="home-cuisine-grid">${categories.map(([id,icon,label])=>
+            `<button type="button" class="home-cuisine-item ${ui.genre===id?"selected":""}" data-action="genreChip" data-genre="${esc(id)}" aria-pressed="${ui.genre===id}">
+              <span class="home-cuisine-icon" aria-hidden="true">${navIcon(icon)}</span><strong>${label}</strong></button>`).join("")}</div>
+        </section>
+        <section class="feed-memory" aria-labelledby="feedMemoryTitle">
+          <div class="home-section-head"><h2 id="feedMemoryTitle">あなたの食べた記録</h2><button class="home-all-genres" data-tab="visited">すべて見る ›</button></div>
+          ${recent.length?`<div class="feed-card-strip">${recent.map(x=>smallCard(x.shop,x.date?x.date+" · "+x.shop.ward:x.shop.ward)).join("")}</div>`:
+            '<div class="feed-empty"><strong>これからのおいしいを、ここに。</strong><p>お店に行ったら記録を残してみましょう。自分の写真も並べられます。</p><button type="button" class="btn" data-tab="visited">訪問記録を見る</button></div>'}
+        </section>
+        <section class="feed-memory" aria-labelledby="feedWishlistTitle">
+          <div class="home-section-head"><h2 id="feedWishlistTitle">行ってみたいお店</h2><button class="home-all-genres" data-tab="wishlist">すべて見る ›</button></div>
+          ${saved.length?`<div class="feed-card-strip">${saved.map(x=>smallCard(x,x.ward+" · "+x.genre)).join("")}</div>`:
+            '<div class="feed-empty"><strong>気になるお店をためていこう。</strong><p>「行きたいに保存」したお店がここに並びます。</p><button type="button" class="btn" data-tab="mapsearch">地図からお店を探す</button></div>'}
+        </section>
+        <section class="home-metrics" aria-label="自分のグルメ記録">
+          <button type="button" data-tab="wishlist" class="home-metric">
+            <span class="home-metric-icon" aria-hidden="true">${navIcon("heart")}</span>
+            <span class="home-metric-copy"><strong>${s.wish}<small>軒</small></strong><span>行きたいお店</span></span><span class="home-metric-arrow" aria-hidden="true">›</span></button>
+          <button type="button" data-tab="visited" class="home-metric">
+            <span class="home-metric-icon visited" aria-hidden="true">${navIcon("check")}</span>
+            <span class="home-metric-copy"><strong>${s.visited}<small>軒</small></strong><span>行ったお店</span></span><span class="home-metric-arrow" aria-hidden="true">›</span></button>
+        </section>
+        <section class="home-find" aria-labelledby="homeFindTitle">
+          <div class="home-section-head home-find-head"><h2 id="homeFindTitle">お店をもっと探す</h2>
+            <button type="button" id="homeFiltersToggle" class="home-filter-toggle" data-action="toggleFilters" aria-expanded="${ui.filtersOpen}" aria-controls="homeExtraFilters">${navIcon("search")} 詳細検索 ${ui.filtersOpen?"−":"＋"}</button></div>
+          <div id="homeExtraFilters" ${ui.filtersOpen?"":'hidden'}>${ui.filtersOpen?filters():""}</div>
+          ${resultsView()}
+        </section>
+        <p class="home-disclaimer">店舗の写真は本人が登録したものです。写真がないお店はジャンルの線画で表示します。営業時間・価格は訪問前にご確認ください。</p>
+      </div>`;
     }
     function savedView(){const t=ui.tab==='wishlist';return pageHeader(t?'SAVED PLACES':'MY FOOD DIARY',t?'気になるお店を、ひとまとめに。':'訪問の記録を、残そう。',t?'保存したお店から、次の食事を決めましょう。':'再訪したいお店や、感想を振り返れます。','<button class="btn primary" data-action="discover">✦ 新しい店を発掘</button>')+statsHtml()+cardsView()}
     function randomShop(){let list=getShops().filter(s=>statusOf(s)==='new');if(!list.length)list=getShops();return list[Math.floor(Math.random()*list.length)]}
