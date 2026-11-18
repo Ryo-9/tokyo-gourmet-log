@@ -30,3 +30,5 @@ jobs:
           node --test scripts/native-auth.test.mjs
       - name: Test group saved-shop picker and user-code sharing
         run: node --test scripts/group-ux.test.mjs
+      - name: Validate responsive home, five-tab navigation and inline scripts
+        run: node --test scripts/mobile-home.test.mjs
