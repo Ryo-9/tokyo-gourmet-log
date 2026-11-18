@@ -31,7 +31,9 @@ test("home cuisine shortcuts use a consistent set of outline SVG symbols rather 
   assert.ok(home.includes("home-cuisine-icon"));
   assert.ok(home.includes("料理から探す"));
   assert.ok(!home.includes("🍜")&&!home.includes("🍔")&&!home.includes("🥩"));
-  assert.ok(home.includes("今日、<br>何食べる？"));
+  assert.ok(home.includes("今日は、どこへ？"));
+  assert.ok(home.includes("feed-spotlight"));
+  assert.ok(home.includes("feed-memory"));
   assert.ok(html.includes(".home-search input{background:transparent!important"));
 });
 
