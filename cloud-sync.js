@@ -12,7 +12,7 @@
     return;
   }
   const sdkSrc="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0";
-  let client=null,user=null,sdkPromise=null,busy=false,notice="",importPreview=null,cloudSnapshot=null,initialized=false;
+  let client=null,user=null,sdkPromise=null,busy=false,notice="",importPreview=null,cloudSnapshot=null,initialized=false,nativeBridgeReady=false;
   const safe=x=>esc(String(x??""));
   const validDate=x=>/^\d{4}-\d{2}-\d{2}$/.test(String(x??""));
   function pickURL(s){
@@ -58,6 +58,7 @@
           if(ui.tab==="data")render();
         });
         await window.TGLNativeAuth.register(client);
+        nativeBridgeReady=true;
       }
       client.auth.onAuthStateChange(async(_event,session)=>{
         user=session?.user||null;
@@ -86,6 +87,7 @@
   async function login(email){
     waitClient();
     const native=!!window.TGLNativeAuth?.isNative?.();
+    if(native&&!nativeBridgeReady)throw Error("iPhoneアプリの認証連携が未設定です。XcodeのURL設定とAppプラグインを確認してください。");
     const redirect=native?window.TGLNativeAuth.redirectUrl:location.origin+location.pathname;
     const {error}=await client.auth.signInWithOtp({email,options:{emailRedirectTo:redirect,shouldCreateUser:true}});
     if(error)throw error;
