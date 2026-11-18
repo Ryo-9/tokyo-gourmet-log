@@ -1,0 +1,6 @@
+{
+  "appId": "io.github.ryo9.tokyogourmetlog",
+  "appName": "TOKYO GOURMET LOG",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}
