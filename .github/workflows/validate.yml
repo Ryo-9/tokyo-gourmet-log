@@ -1,0 +1,24 @@
+name: TOKYO GOURMET LOG checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  static-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Parse browser JavaScript
+        run: |
+          for file in discovery.js community.js interactive-map.js cloud-config.js cloud-sync.js online-groups.js service-worker.js; do
+            node --check "$file"
+          done
+      - name: Verify app assets and privacy invariants
+        run: node scripts/check-invariants.mjs
