@@ -1,5 +1,7 @@
--- TOKYO GOURMET LOG cloud foundation (DRAFT — NOT APPLIED)
--- For a NEW or explicitly approved Supabase project only.
+-- TOKYO GOURMET LOG cloud foundation (APPLIED — 2026-11-18)
+-- Applied to approved Supabase project uqcwtixittdrktziszab.
+-- Migration: 20261118082615 tokyo_gourmet_log_private_foundation.
+-- This file is a retained source reference; do not re-run blindly.
 -- Version: 2026-11-18 / phase 1 private data synchronization
 -- Keep existing GitHub Pages localStorage untouched until opted-in migration.
 -- Public feed, groups, photo storage, follows and proximity are NOT enabled.
