@@ -10,15 +10,21 @@ const dist = join(root, "dist");
 const assets = [
   "index.html", "icon.svg", "manifest.webmanifest", "service-worker.js",
   "discovery.js", "community.js", "interactive-map.js",
-  "cloud-config.js", "cloud-sync.js", "online-groups.js"
+  "cloud-config.js", "cloud-sync.js", "online-groups.js", "native-auth.js"
 ];
 
 test("build copies only the expected public files and preserves their contents", () => {
   execFileSync(process.execPath, [join(root, "scripts/build-mobile.mjs")], { cwd: root });
   assert.deepEqual(readdirSync(dist).sort(), assets.slice().sort());
   for (const name of assets) {
+    if(name==="index.html")continue; // Native-only script is intentionally injected.
     assert.deepEqual(readFileSync(join(dist, name)), readFileSync(join(root, name)), name + " must remain unchanged");
   }
+  const publicIndex=readFileSync(join(root,"index.html"),"utf8");
+  const nativeIndex=readFileSync(join(dist,"index.html"),"utf8");
+  assert.ok(!publicIndex.includes("native-auth.js"),"Public PWA must not load a native callback");
+  assert.ok(nativeIndex.includes('<script src="./native-auth.js"></script>'),"Native callback must be bundled");
+  assert.ok(nativeIndex.indexOf("native-auth.js")<nativeIndex.indexOf("cloud-sync.js"),"Native auth must load before cloud sync");
   assert.equal(existsSync(join(dist, ".env")), false);
   assert.equal(existsSync(join(dist, "docs")), false);
   assert.equal(existsSync(join(dist, ".github")), false);
