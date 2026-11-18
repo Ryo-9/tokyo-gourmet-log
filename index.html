@@ -603,6 +603,70 @@
       .map-result-topline strong{font-size:13px}
     }
 
+
+    /* Personal discovery feed: real saved pictures, editorial hierarchy and horizontal browsing */
+    .home-feed .home-hero{padding:7px 0 22px;border:0;border-radius:0;background:transparent;box-shadow:none}
+    .home-feed .home-brand{font-size:11px;letter-spacing:.1em}
+    .home-feed .home-hero-copy{max-width:none;padding:11px 0 16px}
+    .home-feed .home-hero h1{font-size:clamp(28px,5vw,39px);margin:3px 0 0;letter-spacing:-.045em}
+    .home-feed .home-kicker{color:var(--muted);font-size:12px;font-weight:690}
+    .home-feed .home-search{background:var(--panel);box-shadow:none}
+    .home-feed .home-search button{min-height:43px}
+    .feed-caption{font-size:11px;font-weight:610;color:var(--muted)}
+    .feed-spotlight{margin:0 0 27px}
+    .feed-feature{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);background:var(--panel);border:1px solid var(--border);border-radius:20px;overflow:hidden}
+    .feed-feature-visual{display:block;border:0;background:var(--panel2);padding:0;width:100%;cursor:pointer;text-align:left}
+    .feed-feature .food-photo.feed-large{aspect-ratio:auto;height:100%;min-height:250px}
+    .feed-feature .food-photo.feed-large .food-icon{width:108px;height:108px}
+    .feed-feature .food-photo.feed-large .food-icon .ui-icon{width:54px;height:54px}
+    .feed-feature-body{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:26px;gap:5px;min-width:0}
+    .feed-feature-meta{font-size:12px;color:var(--muted);font-weight:660}
+    .feed-feature-body h3{font-size:clamp(19px,2.1vw,26px);letter-spacing:-.025em;line-height:1.4;font-weight:790;margin:3px 0 17px;overflow-wrap:anywhere}
+    .feed-feature-actions{display:flex;gap:9px;flex-wrap:wrap}
+    .feed-feature-actions .btn{min-height:45px;padding:10px 15px;font-size:13px}
+    .feed-memory{margin:27px 0}
+    .feed-card-strip{display:flex;gap:11px;overflow-x:auto;scroll-snap-type:x proximity;padding:0 0 9px;scrollbar-width:thin}
+    .feed-small-card{display:flex;flex-direction:column;flex:0 0 172px;min-width:0;background:var(--panel);border:1px solid var(--border);border-radius:15px;text-align:left;padding:0;overflow:hidden;color:var(--fg);scroll-snap-align:start}
+    .feed-small-card .food-photo.feed-small{aspect-ratio:1.52/1}
+    .feed-small-card .food-photo .food-icon{width:58px;height:58px}
+    .feed-small-card .food-photo .food-icon .ui-icon{width:30px;height:30px}
+    .feed-small-card .photo-label{font-size:10px}
+    .feed-small-info{display:flex;flex-direction:column;gap:4px;min-width:0;padding:11px 12px 13px}
+    .feed-small-info strong{font-size:13px;line-height:1.4;font-weight:770;overflow-wrap:anywhere}
+    .feed-small-info small{font-size:11px;color:var(--muted);line-height:1.35}
+    .feed-empty{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:20px}
+    .feed-empty strong{display:block;font-size:15px;font-weight:770;margin:0 0 4px}
+    .feed-empty p{font-size:12px;color:var(--muted);margin:0 0 13px}
+    .feed-empty .btn{min-height:44px;font-size:12px}
+    .home-feed .home-cuisines{margin:24px 0}
+    .home-feed .home-action-grid{margin-bottom:8px}
+    .home-feed .home-action{min-height:102px}
+    .home-feed .home-metrics{margin:18px 0 28px}
+    .home-feed .home-find{margin-top:31px}
+    @media(max-width:760px){
+      .home-feed .home-hero{padding:8px 0 16px;margin:0 0 4px}
+      .home-feed .home-hero-copy{padding:8px 0 13px}
+      .home-feed .home-hero h1{font-size:29px}
+      .feed-feature{display:flex;flex-direction:column}
+      .feed-feature .food-photo.feed-large{min-height:0;aspect-ratio:1.65/1}
+      .feed-feature-body{padding:16px 18px 18px}
+      .feed-feature-body h3{font-size:20px;margin:4px 0 12px}
+      .feed-feature-actions .btn{min-height:44px}
+      .home-feed .home-cuisine-grid{display:flex;gap:9px;overflow-x:auto;scroll-snap-type:x proximity;padding:2px 2px 9px;scrollbar-width:thin}
+      .home-feed .home-cuisine-item{flex:0 0 94px;min-height:94px;scroll-snap-align:start}
+      .feed-small-card{flex-basis:161px}
+      .home-feed .home-action{min-height:95px}
+      .home-feed .home-action-map{min-height:76px}
+      .feed-spotlight{margin:0 0 23px}
+      .feed-memory{margin:24px 0}
+    }
+    @media(max-width:375px){
+      .home-feed .home-hero h1{font-size:27px}
+      .feed-feature .food-photo.feed-large{aspect-ratio:1.8/1}
+      .feed-feature-body{padding:15px}
+      .home-feed .home-cuisine-item{flex-basis:89px}
+    }
+
   </style>
 </head>
 <body>
