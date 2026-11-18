@@ -43,8 +43,17 @@ test("bottom bar uses five accessible icon tabs with an active-page indicator",(
 
 function renderHome({keyword="",genre="all",filtersOpen=false}={}){
   const fn=section("function explore(){","function savedView");
+  const shops=[
+    {id:"one",name:"老舗の寿司店",ward:"中央区",genre:"和食・寿司",status:"new"},
+    {id:"wish",name:"行きたいカフェ",ward:"台東区",genre:"カフェ・甘味",status:"wish"},
+    {id:"visit",name:"訪問した店",ward:"渋谷区",genre:"焼肉",status:"visited"}
+  ];
+  const visits=[{shopId:"visit",date:"2026-10-10"}];
   return vm.runInNewContext(fn+"\nexplore();",{
-    stats:()=>({wish:12,visited:7}),ui:{keyword,genre,filtersOpen},
+    stats:()=>({wish:12,visited:7}),ui:{keyword,genre,filtersOpen},store:{visits},
+    getShops:()=>shops,getShop:id=>shops.find(x=>x.id===id),
+    statusOf:shop=>shop.status,
+    photoVisual:(shop,variant)=>'<div class="food-photo '+variant+'">NO PHOTO</div>',
     GENRES:["麺・ラーメン","カフェ・甘味","洋食・バーガー","焼肉","カレー・エスニック","スイーツ・甘味"],
     esc:s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;"),
     navIcon:name=>'<svg data-icon="'+name+'"></svg>',
@@ -61,6 +70,10 @@ test("home begins with an accessible visual search and three primary actions",()
   assert.match(home,/data-tab="mapsearch"/);
   assert.match(home,/data-tab="sns"/);
   assert.match(home,/data-action="discover"/);
+  assert.match(home,/class="feed-feature"/);
+  assert.match(home,/class="feed-card-strip"/);
+  assert.match(home,/あなたの食べた記録/);
+  assert.match(home,/行ってみたいお店/);
   assert.ok(home.indexOf("home-search")<home.indexOf("home-action-grid"));
   assert.match(home,/12<small>軒<\/small>/);
   assert.match(home,/7<small>軒<\/small>/);
