@@ -1,4 +1,4 @@
-const CACHE='tgy-gourmet-3-2-20261118';
-self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./','./index.html','./icon.svg','./manifest.webmanifest','./discovery.js']))));
+const CACHE='tgy-gourmet-3-3-20261118';
+self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./','./index.html','./icon.svg','./manifest.webmanifest','./discovery.js','./community.js']))));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))));
 self.addEventListener('fetch',event=>{const request=event.request;if(request.method!=='GET')return;const u=new URL(request.url);if(u.origin!==self.location.origin)return;event.respondWith(fetch(request).then(res=>{if(res.ok){const clone=res.clone();caches.open(CACHE).then(c=>c.put(request,clone));}return res}).catch(()=>caches.match(request).then(x=>x||caches.match('./index.html'))));});
