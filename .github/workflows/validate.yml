@@ -28,3 +28,5 @@ jobs:
         run: |
           node --check native-auth.js
           node --test scripts/native-auth.test.mjs
+      - name: Test group saved-shop picker and user-code sharing
+        run: node --test scripts/group-ux.test.mjs
