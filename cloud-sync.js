@@ -97,6 +97,7 @@
     if(!confirm(msg))return;
     exportJson(); // copy local snapshot; does not mutate the source
     const timestamp=new Date().toISOString();
+    importPreview=null;cloudSnapshot=null;
     const places=items.map(s=>{
       const pair=locationPair(s),st=statusOf(s);
       return {user_id:uid,client_id:String(s.id).slice(0,160),name:String(s.name).slice(0,180),
@@ -165,6 +166,110 @@
     setTimeout(()=>URL.revokeObjectURL(blobURL),2500);
     notice="クラウドから店舗"+places.length+"件・訪問履歴"+visits.length+"件をJSONに書き出しました。端末への自動上書きはありません。";
   }
+
+  // Read-only cloud preview; local browser state is not changed until confirmed.
+  async function fetchCloudSnapshot(){
+    waitClient();
+    const {data,error}=await client.auth.getUser();
+    if(error||!data?.user)throw Error("もう一度ログインしてください。");
+    const uid=data.user.id;
+    async function readAll(table){
+      const all=[];
+      for(let offset=0;offset<5000;offset+=500){
+        const {data:batch,error:problem}=await client.from(table)
+          .select("*").eq("user_id",uid).order("created_at",{ascending:true}).range(offset,offset+499);
+        if(problem)throw Error(table+"："+problem.message);
+        all.push(...batch);
+        if(batch.length<500)return all;
+      }
+      throw Error("クラウドの件数が多いため全件を読み取れません。");
+    }
+    const [places,visits]=await Promise.all([readAll("tgl_saved_places"),readAll("tgl_visits")]);
+    return {uid,places,visits};
+  }
+  function importStats(snapshot){
+    const localIds=new Set([...SEED,...store.custom].map(s=>s.id));
+    const seenVisitIds=new Set(store.visits.map(v=>v.id));
+    return {
+      places:snapshot.places.length,visits:snapshot.visits.length,
+      toAdd:snapshot.places.filter(p=>p.client_id&&(!localIds.has(p.client_id)||!Object.prototype.hasOwnProperty.call(store.mods,p.client_id))).length,
+      newVisits:snapshot.visits.filter(v=>v.client_id&&!seenVisitIds.has(v.client_id)).length
+    };
+  }
+  async function previewMerge(){
+    cloudSnapshot=await fetchCloudSnapshot();
+    importPreview=importStats(cloudSnapshot);
+    notice=(importPreview.places||importPreview.visits)?"クラウドの記録を読み込みました。件数を確認して取り込めます。":
+      "クラウドにはまだ記録がありません。まずこの端末の記録をアップロードできます。";
+  }
+  function validClientPlace(p){
+    return typeof p?.client_id==="string"&&p.client_id.length>0&&p.client_id.length<=160&&
+      typeof p.name==="string"&&p.name.length>0&&typeof p.area==="string";
+  }
+  async function mergeCloud(){
+    if(!cloudSnapshot||!importPreview)throw Error("先にクラウドのデータを読み込んでください。");
+    const {data,error}=await client.auth.getUser();
+    if(error||data?.user?.id!==cloudSnapshot.uid)throw Error("ログインユーザーが変わりました。もう一度読み込んでください。");
+    if(!confirm("クラウドの未登録の店舗と訪問履歴をこの端末に追加します。\n既存の訪問メモ・店舗は上書きしません。\nまずローカルJSONバックアップをダウンロードします。続けますか？"))return;
+    exportJson();
+    const originalShops=new Map([...SEED,...store.custom].map(p=>[p.id,p]));
+    const alreadyVisited=new Set(store.visits.map(v=>v.id));
+    const newShops=[],newMods={},newVisits=[];
+    for(const p of cloudSnapshot.places){
+      if(!validClientPlace(p))continue;
+      const id=p.client_id,original=originalShops.get(id);
+      if(!original){
+        const area=WARDS.includes(p.area)?p.area:p.area==="23区外"?"23区外":"未設定";
+        const region=SEED.find(row=>row.ward===area)?.region||"その他";
+        const sh={id,name:p.name.slice(0,160),ward:area,region,genre:String(p.cuisine||"未分類").slice(0,100),
+          seed:false,notes:String(p.note||"").slice(0,4000)};
+        if(p.lat!==null&&p.lon!==null){
+          const lat=Number(p.lat),lon=Number(p.lon);
+          if(Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180){
+            sh.lat=lat;sh.lon=lon;sh.mapSource="cloud_import";
+          }
+        }
+        originalShops.set(id,sh);newShops.push(sh);
+      }
+      // Only create missing local status records; existing edits always win.
+      if(!Object.prototype.hasOwnProperty.call(store.mods,id)){
+        const status=["new","wish","visited"].includes(p.status)?p.status:"new";
+        const mod={status};
+        if(original&&!original.notes&&p.note)mod.notes=String(p.note).slice(0,4000);
+        if(original&&(original.lat===null||original.lat===undefined||original.lat==="")&&p.lat!==null&&p.lon!==null){
+          const lat=Number(p.lat),lon=Number(p.lon);
+          if(Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180){
+            mod.lat=lat;mod.lon=lon;mod.mapSource="cloud_import";
+          }
+        }
+        newMods[id]=mod;
+      }
+    }
+    const cloudPlaceIDs=new Map(cloudSnapshot.places.map(p=>[p.id,p.client_id]));
+    for(const v of cloudSnapshot.visits){
+      const id=String(v.client_id||"");
+      if(!id||alreadyVisited.has(id))continue;
+      const localShopId=cloudPlaceIDs.get(v.place_id);
+      if(!localShopId||!originalShops.has(localShopId))continue;
+      const date=String(v.visited_on||"");
+      if(!validDate(date))continue;
+      const rating=Number(v.rating);
+      newVisits.push({id,shopId:localShopId,date,rating:Number.isInteger(rating)&&rating>=1&&rating<=5?rating:0,
+        amount:v.price_yen===null?"":String(v.price_yen),
+        dish:String(v.dish||"").slice(0,100),note:String(v.note||"").slice(0,3000),
+        revisit:String(v.revisit||"")});
+      alreadyVisited.add(id);
+      if(newMods[localShopId]?.status==="new")newMods[localShopId].status="visited";
+    }
+    // Single local mutation after all rows have been converted.
+    store.custom.push(...newShops);
+    store.mods={...newMods,...store.mods};
+    store.visits.push(...newVisits);
+    save();
+    importPreview=null;cloudSnapshot=null;
+    notice="端末への取り込み完了：追加店舗"+newShops.length+"件・状態復元"+Object.keys(newMods).length+"件・訪問記録"+newVisits.length+"件。既存データは残しました。";
+  }
+
   document.addEventListener("submit",async ev=>{
     if(ev.target.id!=="tglCloudEmailForm")return;
     ev.preventDefault();if(busy)return;
@@ -180,7 +285,9 @@
     try{
       if(mode==="upload")await upload();
       else if(mode==="download")await download();
-      else if(mode==="logout"){waitClient();const {error}=await client.auth.signOut();if(error)throw error;user=null;notice="ログアウトしました。端末の記録はそのままです。";}
+      else if(mode==="preview")await previewMerge();
+      else if(mode==="merge")await mergeCloud();
+      else if(mode==="logout"){importPreview=null;cloudSnapshot=null;waitClient();const {error}=await client.auth.signOut();if(error)throw error;user=null;notice="ログアウトしました。端末の記録はそのままです。";}
     }catch(err){notice="クラウド操作に失敗しました："+String(err.message||err).slice(0,220);}
     busy=false;render();
   });
