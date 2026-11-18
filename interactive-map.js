@@ -19,7 +19,7 @@
     cuisine:"all",radius:1000,filter:"all",mode:"nearby",nearby:[],searchTerm:"",searchAt:0,searchCenter:null,
     lastCenter:ORIGIN_VIEW,lastZoom:12,coordinates:null,
     loading:false,error:"",geocode:[],geocodeShopId:null,
-    pinShopId:"",pinCoords:null,lastQueryAt:0,geocodeAt:0,advancedOpen:false
+    pinShopId:"",pinCoords:null,lastQueryAt:0,geocodeAt:0,advancedOpen:false,initialNearbyRequested:false
   };
   let leafletPromise=null,map=null,pinLayer=null,ownMarker=null,createdMapFor=null;
   const e=x=>esc(String(x??""));
@@ -353,7 +353,16 @@
   render=function(){
     if(map){map.remove();map=null;createdMapFor=null;}
     previousRender();
-    if(ui.tab==="mapsearch")requestAnimationFrame(()=>{if(ui.tab==="mapsearch")mountMap();});
+    if(ui.tab==="mapsearch")requestAnimationFrame(()=>{
+      if(ui.tab!=="mapsearch")return;
+      void mountMap();
+      if(!state.initialNearbyRequested){
+        state.initialNearbyRequested=true;
+        // The first map visit explores only the fixed Tokyo Station map center.
+        // It never requests the user's actual GPS position automatically.
+        setTimeout(()=>{if(ui.tab==="mapsearch")void searchAround("map");},280);
+      }
+    });
   };
   document.addEventListener("change",event=>{
     if(event.target?.id==="mapStatusFilter"){state.filter=event.target.value;refresh();}
