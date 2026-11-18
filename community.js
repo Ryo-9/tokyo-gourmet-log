@@ -211,11 +211,11 @@
   }
   const originalSocialPage=socialPage;
   function hubTabs(){
-    const items=[["lists","友達と共有"],["moment","今日のひと皿"],["clips","SNSクリップ"]];
+    const items=[["lists","友達と共有"],["groups","グループ"],["moment","今日のひと皿"],["clips","SNSクリップ"]];
     return '<div class="hub-tabs" role="group" aria-label="つながる機能">'+
       items.map(x=>'<button class="'+(hubView===x[0]?'active':'')+'" data-action="hubView" data-view="'+x[0]+'">'+x[1]+'</button>').join("")+'</div>';
   }
-  socialPage=function(){return hubTabs()+(hubView==="moment"?momentCard():hubView==="clips"?originalSocialPage():hubHtml());};
+  socialPage=function(){return hubTabs()+(hubView==="groups"?(window.TGLGroups?.renderPanel?.()||'<section class="panel">グループ機能を準備しています。</section>'):hubView==="moment"?momentCard():hubView==="clips"?originalSocialPage():hubHtml());};
   const originalExplore=explore;
   explore=function(){
     const original=originalExplore().replace('class="action-tile coral" data-tab="sns"','class="action-tile coral" data-tab="sns" data-action="hubShowClips"');
