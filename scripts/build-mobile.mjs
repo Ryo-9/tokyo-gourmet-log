@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, rmSync, copyFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, copyFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
@@ -28,7 +28,6 @@ const index=readFileSync(indexPath,"utf8");
 const anchor='<script src="./cloud-sync.js"></script>';
 if(!index.includes(anchor))throw new Error("Cloud sync load point not found in iOS bundle.");
 // Native auth must run before cloud-sync.js. Never add this to the public GitHub Pages index.
-import { writeFileSync } from "node:fs";
 writeFileSync(indexPath,index.replace(anchor,'<script src="./native-auth.js"></script>\n  '+anchor));
 console.log("Created Capacitor web bundle: " + files.length + " public assets.");
 console.log("iOS app generation / signing still requires Xcode on a Mac.");
