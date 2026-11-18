@@ -1,5 +1,5 @@
-/* STAGED ONLY: Private cloud sync client for TOKYO GOURMET LOG
- * Not loaded by production index.html until Auth URL settings + browser tests.
+/* Optional public beta: Private cloud sync client for TOKYO GOURMET LOG
+ * Loaded only as an opt-in settings feature; Auth redirect configured by owner.
  * Publishable keys only, never service_role/secret keys. No automatic upload.
  * Supabase JS pinned to exact version 2.119.0.
  */
