@@ -338,6 +338,58 @@
       #tglCloudPanel .inline-links{grid-template-columns:minmax(0,1fr)}
     }
 
+
+    /* Invite-approved cloud group beta: responsive controls and no private visit data */
+    .hub-tabs{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .tgl-groups{min-width:0;color:var(--fg)}
+    .group-header{display:flex;gap:11px;align-items:start;justify-content:space-between;padding:17px;background:var(--panel);border:1px solid var(--border);border-radius:18px}
+    .group-header h2{font-size:21px;line-height:1.4;letter-spacing:-.025em;margin:3px 0 7px;font-weight:830;color:var(--fg)}
+    .group-header p{font-size:12px;color:var(--muted);line-height:1.6;margin:0}
+    .group-header>.btn{flex-shrink:0;min-height:40px}
+    .group-privacy-note{color:var(--muted);font-size:11px;line-height:1.7;margin:12px 0 18px;background:var(--panel2);border:1px solid var(--border);padding:12px 14px;border-radius:12px}
+    .group-privacy-note strong{color:var(--fg)}
+    .group-user-code,.group-guest,.group-panel,.tgl-group-detail{background:var(--panel);border:1px solid var(--border);box-shadow:var(--soft-shadow);border-radius:16px;padding:16px;margin:12px 0}
+    .group-user-code{display:flex;align-items:center;gap:10px;justify-content:space-between}
+    .group-user-code small{display:block;color:var(--muted);font-size:10px;font-weight:750}
+    .group-user-code strong{display:block;font-size:12px;overflow-wrap:anywhere;color:var(--fg);margin:5px 0}
+    .group-user-code p,.group-guest p{font-size:11px;line-height:1.6;color:var(--muted);margin:5px 0}
+    .group-user-code .btn{flex-shrink:0}
+    .group-guest h3,.group-panel h3,.tgl-group-detail h3{font-size:16px;color:var(--fg);margin:0 0 10px;font-weight:830;line-height:1.45}
+    .group-panel .hint,.tgl-group-detail .hint{color:var(--muted);font-size:11px;line-height:1.6}
+    .tgl-group-card{width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px;
+      background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:left;margin:7px 0;color:var(--fg)}
+    .tgl-group-card.selected{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+    .tgl-group-card strong{display:block;font-size:13px}
+    .tgl-group-card small{display:block;font-size:10px;color:var(--muted);margin-top:5px}
+    .tgl-group-card>span:last-child{font-size:20px;color:var(--muted)}
+    .tgl-group-invite{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--panel2);
+      border:1px solid var(--border);border-radius:12px;padding:12px;margin:8px 0}
+    .tgl-group-invite>div{flex:1;min-width:150px}.tgl-group-invite strong{display:block;color:var(--fg);font-size:12px}
+    .tgl-group-invite small{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+    .tgl-group-invite .btn{min-height:38px;white-space:normal}
+    .tgl-group-form{display:grid;gap:10px;margin:15px 0 0}
+    .tgl-group-form .field{margin:0}.tgl-group-form .field>span{display:block;color:var(--fg);font-size:12px;font-weight:650;margin-bottom:6px}
+    .tgl-group-form input{width:100%;min-height:44px}
+    .tgl-group-form .btn{justify-self:start;min-height:43px}
+    .group-form-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .group-subheading{display:flex;justify-content:space-between;align-items:center;gap:8px;padding-top:12px;margin-top:17px;border-top:1px solid var(--border)}
+    .group-subheading strong{color:var(--fg);font-size:13px}
+    .group-subheading span{color:var(--muted);font-size:11px}
+    .group-place{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--border);padding:12px 0}
+    .group-place-content{flex:1;min-width:150px}.group-place-content strong{font-size:13px;color:var(--fg);display:block}
+    .group-place-content small{font-size:11px;color:var(--muted);display:block;margin-top:4px}
+    .group-place-actions{display:flex;gap:6px}.group-place-actions .btn{min-height:38px;font-size:12px;padding:7px 9px}
+    @media(max-width:760px){
+      .hub-tabs{grid-template-columns:repeat(4,minmax(0,1fr))}
+      .hub-tabs button{font-size:10px;min-height:46px;padding:6px 1px}
+      .group-header{padding:14px;flex-wrap:wrap}.group-header h2{font-size:20px}
+      .group-header .btn{margin-left:auto}
+      .group-user-code{flex-wrap:wrap}.group-user-code .btn{margin-left:auto}
+      .group-form-pair{grid-template-columns:1fr}
+      .group-place-actions{width:100%;justify-content:flex-end}
+      .tgl-group-invite .btn{flex:1}
+    }
+
   </style>
 </head>
 <body>
@@ -490,5 +542,6 @@
   <script src="./interactive-map.js"></script>
   <script src="./cloud-config.js"></script>
   <script src="./cloud-sync.js"></script>
+  <script src="./online-groups.js"></script>
 </body>
 </html>
