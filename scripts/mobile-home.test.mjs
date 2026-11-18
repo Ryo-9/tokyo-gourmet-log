@@ -81,6 +81,8 @@ test("advanced filters can stay expanded through subsequent renders",()=>{
   assert.match(home,/name="homeKeyword" type="search" value="東京"/);
   assert.match(html,/if\(e.target.id==='homeSearchForm'\)/);
   assert.match(html,/if\(a==='toggleFilters'\)/);
+  assert.ok(html.includes("ui.region='all';ui.ward='all';ui.status='all';ui.genre='all';ui.page=1;render();"));
+  assert.ok(html.includes("ui.keyword='';ui.region='all';ui.ward='all';ui.status='all';ui.filtersOpen=false;"));
 });
 
 test("search output escapes untrusted text and preserves manual-only private data",()=>{
