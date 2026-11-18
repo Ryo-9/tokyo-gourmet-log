@@ -5,7 +5,7 @@
 (function(){
   "use strict";
   const state={
-    started:false,loading:false,busy:false,ready:false,me:null,
+    started:false,loading:false,busy:false,ready:false,authSubscribed:false,me:null,
     groups:[],invites:[],selected:"",places:[],votes:[],
     error:"",notice:"",loadVersion:0
   };
@@ -102,6 +102,18 @@
   async function ensureAuth(){
     const c=await window.TGLCloud?.ready?.();
     if(!c)throw Error("Supabase接続を利用できません。設定からログインしてください。");
+    if(!state.authSubscribed){
+      state.authSubscribed=true;
+      c.auth.onAuthStateChange((event,session)=>{
+        if(event!=="SIGNED_IN"&&event!=="SIGNED_OUT")return;
+        const nextId=session?.user?.id||null,oldId=state.me?.id||null;
+        if(nextId===oldId)return;
+        state.me=session?.user||null;
+        state.groups=[];state.invites=[];state.selected="";state.places=[];state.votes=[];
+        state.ready=false;state.started=false;state.error="";state.notice="";
+        if(document.getElementById("tglGroupsPanel"))queueMicrotask(()=>view());
+      });
+    }
     const {data,error}=await c.auth.getUser();
     if(error&&error.name!=='AuthSessionMissingError')throw Error("認証状態を取得できません："+error.message);
     state.me=data?.user||null;return c;
