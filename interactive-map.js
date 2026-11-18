@@ -16,10 +16,10 @@
     {id:"bar",label:"酒場・バー",q:'["amenity"~"^(bar|pub)$"]',term:"居酒屋"}
   ];
   const state={
-    cuisine:"all",radius:1000,filter:"all",mode:"mine",nearby:[],
+    cuisine:"all",radius:1000,filter:"all",mode:"nearby",nearby:[],searchTerm:"",searchAt:0,searchCenter:null,
     lastCenter:ORIGIN_VIEW,lastZoom:12,coordinates:null,
     loading:false,error:"",geocode:[],geocodeShopId:null,
-    pinShopId:"",pinCoords:null,lastQueryAt:0,geocodeAt:0
+    pinShopId:"",pinCoords:null,lastQueryAt:0,geocodeAt:0,advancedOpen:false,initialNearbyRequested:false
   };
   let leafletPromise=null,map=null,pinLayer=null,ownMarker=null,createdMapFor=null;
   const e=x=>esc(String(x??""));
@@ -39,47 +39,66 @@
     return opts.map(x=>'<option value="'+x[0]+'" '+(v===x[0]?'selected':'')+'>'+x[1]+'</option>').join("");
   }
   function mapHeader(){
-    const geos=state.geocode.length?'<div class="map-geocodes"><strong>候補の場所を確認してください</strong>'+
-      state.geocode.map((x,i)=>'<div class="map-geo-option"><span>'+e(x.display_name).slice(0,230)+'</span><button class="btn tiny" data-geo="select" data-index="'+i+'">地図に表示</button></div>').join("")+
-      '<p class="hint">候補を表示した後、地図上の位置を確認して「この場所で登録」を押してください。</p></div>':"";
-    return '<section class="map-v4">'+
-      '<div class="map-main-header"><div class="share-eyebrow">EXPLORE YOUR FOOD MAP</div>'+
-      '<h1>地図で、おいしいを見つける。</h1><p>今日のごはんも、行ったお店の思い出も、ひとつの地図に。</p></div>'+
-      '<div class="map-cuisine"><div class="map-title-row"><strong>まず、何が食べたい？</strong><small>料理を選んでから検索</small></div>'+
-      '<div class="map-chip-row" role="group" aria-label="料理ジャンル">'+cuisines.map(c=>
-        '<button type="button" data-map-action="cuisine" data-cuisine="'+c.id+'" class="'+(state.cuisine===c.id?'active':'')+'">'+e(c.label)+'</button>').join("")+
-      '</div></div>'+
-      '<div class="map-controls"><div class="map-title-row"><strong>近くのお店を探す</strong><small>位置情報は検索時だけ利用</small></div>'+
-      '<div class="map-control-buttons"><select id="mapRadius" aria-label="近くのお店の検索半径">'+[500,1000,1500].map(n=>'<option value="'+n+'" '+(state.radius===n?'selected':'')+'>'+n+'m以内</option>').join("")+'</select>'+
-      '<button class="btn primary" data-map-action="nearby" '+(state.loading?'disabled':'')+'>'+(state.loading?'検索しています…':'⌖ 現在地から検索')+'</button>'+
-      '<button class="btn" data-map-action="google">Googleマップでも探す ↗</button></div>'+
-      '<p class="map-tiny">検索条件：'+e(cuisines.find(c=>c.id===state.cuisine)?.label||"すべて")+'。登録タグが不足しているお店は表示されない場合があります。</p></div>'+
-      '<div class="map-tabs" role="group" aria-label="地図に表示する情報">'+
-      '<button data-map-action="mode" data-mode="mine" class="'+(state.mode==="mine"?"active":"")+'">マイマップ</button>'+
-      '<button data-map-action="mode" data-mode="nearby" class="'+(state.mode==="nearby"?"active":"")+'">近くのお店'+(state.nearby.length?'（'+state.nearby.length+'）':'')+'</button></div>'+
-      (state.mode==="mine"?'<div class="map-legend"><span><i class="visited"></i>行った</span><span><i class="wish"></i>行きたい</span><select id="mapStatusFilter" aria-label="マイマップの表示絞り込み">'+mapOptions()+'</select></div>':
-      '<div class="map-legend"><span><i class="nearby"></i>周辺の店舗候補</span><span>直線距離の目安</span></div>')+
-      '<div id="tglRealMap" aria-label="自分の飲食店と周辺のお店の地図" role="region"></div>'+
-      (state.error?'<p class="map-result-notice" role="status">'+e(state.error)+'</p>':"")+
-      (state.mode==="mine"?'<div class="map-count">'+personal().length+'軒の位置を表示できます'+(noCoords().length?' · 位置未登録 '+noCoords().length+'軒':"")+'</div>'+
-      '<div class="map-pin-register"><h2>行った店・行きたい店を地図に追加</h2><p>初期230店には住所と座標が未登録のものがあります。店を選んで住所候補を検索するか、地図上で正しい位置をタップしてください。</p>'+
-      '<div class="map-control-buttons"><select id="mapShopSelect" aria-label="位置を登録する店舗"><option value="">店舗を選ぶ</option>'+
-      noCoords().slice(0,300).map(s=>'<option value="'+e(s.id)+'" '+(state.pinShopId===s.id?'selected':'')+'>'+e(s.name)+'（'+e(s.ward)+'）</option>').join("")+'</select>'+
-      '<button class="btn" data-map-action="geocode" '+(state.loading?'disabled':'')+'>店名で場所候補を探す</button></div>'+
-      '<p class="map-tiny">登録したい店を選んでから、地図上の位置をタップしても設定できます。</p>'+geos+
-      (state.pinCoords?'<div class="map-pending"><strong>位置を確認</strong><span>緯度 '+state.pinCoords[0].toFixed(5)+' / 経度 '+state.pinCoords[1].toFixed(5)+'</span>'+
-        '<button class="btn primary" data-map-action="confirmPin">この場所で登録</button><button class="btn" data-map-action="cancelPin">キャンセル</button></div>':"")+'</div>':
-      '<div class="map-results"><strong>見つかったお店 '+state.nearby.length+'軒</strong>'+
-      (state.nearby.length?state.nearby.slice(0,45).map((s,i)=>'<div class="map-found"><div><b>'+e(s.name)+'</b><small>'+e(s.kind)+' · '+s.distance+'m（直線距離）</small></div>'+
-       '<div class="inline-links"><button class="btn tiny" data-map-action="focusNearby" data-index="'+i+'">地図</button>'+
-       '<button class="btn tiny primary" data-map-action="saveNearby" data-index="'+i+'">♡ 保存</button></div></div>').join(""):'<p class="hint">料理ジャンルを選び「現在地から検索」を押してください。</p>')+
-      '</div>')+
-      '<details class="map-fallback"><summary>地図が使えない場合・別のエリアから探す</summary>'+
-      '<p class="hint">Googleマップを開いて地域や店名で検索できます。検索結果をアプリ内に自動取り込みはしません。</p>'+
-      '<div class="map-control-buttons"><input id="mapFallbackArea" placeholder="例：北千住・新宿・大阪" aria-label="探したいエリア"><button class="btn" data-map-action="searchArea">このエリアを探す ↗</button></div>'+
-      '<p class="hint">位置情報を許可しなくても使えます。</p></details>'+
-      '<p class="map-credit">地図・店舗データ © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>（ODbL）。公共サービスの利用制限により検索できない場合があります。訪問済み・行きたいの位置情報は本人の端末内に保存します。</p>'+
-      '</section>';
+      const geos=state.geocode.length?'<div class="map-geocodes"><strong>候補の場所を確認してください</strong>'+
+        state.geocode.map((x,i)=>'<div class="map-geo-option"><span>'+e(x.display_name).slice(0,230)+'</span><button class="btn tiny" data-geo="select" data-index="'+i+'">地図に表示</button></div>').join("")+
+        '<p class="hint">位置を確認してから「この場所で登録」を押してください。</p></div>':"";
+      const mine=personal().filter(s=>state.filter==="all"||statusOf(s)===state.filter);
+      const nearbyCards=state.nearby.slice(0,30).map((s,i)=>'<div class="map-place-card"><div class="map-place-text"><strong>'+e(s.name)+'</strong><span>'+e(s.kind)+' · '+s.distance+'m（直線距離）</span></div>'+
+        '<div class="map-card-actions"><button data-map-action="focusNearby" data-index="'+i+'">ピンを見る</button><button data-map-action="saveNearby" data-index="'+i+'">＋ 保存</button></div></div>').join("");
+      const mineCards=mine.slice(0,25).map(s=>'<div class="map-place-card"><div class="map-place-text"><strong>'+e(s.name)+'</strong><span>'+e(s.ward)+' · '+e(statusOf(s)==="visited"?"行った":"行きたい")+'</span></div>'+
+        '<button data-map-action="focusShop" data-id="'+e(s.id)+'">ピンを見る</button></div>').join("");
+      const content=state.mode==="nearby"?nearbyCards:mineCards;
+      const count=state.mode==="nearby"?state.nearby.length:mine.length;
+      const message=state.error||(
+        state.mode==="nearby"
+          ?"地図を動かして「この範囲で探す」を押すと店舗のピンが表示されます。"
+          :count?"ピンをタップすると、記録や店舗詳細を確認できます。":"保存店の位置がまだありません。ここから周辺のお店を探せます。"
+      );
+      return '<section class="map-v4" aria-label="飲食店を地図から探す">'+
+        '<div class="map-stage">'+
+          '<div id="tglRealMap" role="region" aria-label="店舗ピンと飲食店を探す地図"></div>'+
+          '<div class="map-overlay-top">'+
+            '<div class="map-search-surface"><form id="tglMapSearchForm" role="search" class="map-search-form">'+
+              '<label class="sr-only" for="mapQuery">駅名・エリア・店名を地図で検索</label>'+
+              '<input id="mapQuery" name="mapQuery" type="search" maxlength="120" autocomplete="off" value="'+e(state.searchTerm||"")+'" placeholder="駅・エリア・お店を検索" />'+
+              '<button type="submit" '+(state.loading?'disabled':'')+'>探す</button></form>'+
+            '<div class="map-chip-row" role="group" aria-label="料理ジャンル">'+cuisines.map(c=>
+              '<button type="button" data-map-action="cuisine" data-cuisine="'+c.id+'" class="'+(state.cuisine===c.id?'active':'')+'" aria-pressed="'+(state.cuisine===c.id)+'">'+e(c.label)+'</button>').join("")+'</div>'+
+            '<div class="map-top-actions"><div class="map-tabs" role="group" aria-label="地図の表示">'+
+              '<button data-map-action="mode" data-mode="nearby" class="'+(state.mode==="nearby"?"active":"")+'">お店を探す</button>'+
+              '<button data-map-action="mode" data-mode="mine" class="'+(state.mode==="mine"?"active":"")+'">マイマップ</button></div>'+
+              '<select id="mapRadius" aria-label="検索範囲">'+[500,1000,1500].map(n=>'<option value="'+n+'" '+(state.radius===n?'selected':'')+'>'+n+'m</option>').join("")+'</select></div>'+
+            '</div>'+
+          '</div>'+
+          '<div class="map-overlay-bottom">'+
+            '<div class="map-floating-actions"><button type="button" data-map-action="searchHere" class="map-search-area" '+(state.loading?'disabled':'')+'>'+(state.loading?'検索中…':'この範囲で探す')+'</button>'+
+            '<button type="button" data-map-action="nearby" class="map-locate-action" '+(state.loading?'disabled':'')+' aria-label="現在地を許可して近くのお店を探す">現在地</button></div>'+
+            '<div class="map-result-sheet"><div class="map-result-topline"><strong>'+(state.mode==="nearby"?"見つかったお店":"自分の保存店")+'</strong><span>'+count+'軒</span></div>'+
+              '<p class="map-result-message" role="status">'+e(message)+'</p>'+
+              (content?'<div class="map-place-strip">'+content+'</div>':'')+
+              (state.mode==="mine"?'<div class="map-map-hint">位置未登録：'+noCoords().length+'軒。下の「保存店の位置を登録」から設定できます。</div>':'')+
+            '</div>'+
+          '</div>'+
+        '</div>'+
+        '<details class="map-advanced" '+(state.advancedOpen?'open':'')+'><summary>保存したお店の位置を登録・管理</summary>'+
+          '<div class="map-legend"><span><i class="visited"></i>行った</span><span><i class="wish"></i>行きたい</span><span><i class="nearby"></i>周辺のお店</span>'+
+            '<select id="mapStatusFilter" aria-label="保存店の状態で絞り込む">'+mapOptions()+'</select></div>'+
+          '<div class="map-pin-register"><h2>保存店の位置を登録</h2><p>位置が未登録の店舗を選び、地図上で正しい場所をタップするか、住所候補から確認してください。初期登録店に座標を推測して追加しません。</p>'+
+            '<div class="map-control-buttons"><select id="mapShopSelect" aria-label="位置を登録する店舗"><option value="">店舗を選ぶ</option>'+
+            noCoords().slice(0,300).map(s=>'<option value="'+e(s.id)+'" '+(state.pinShopId===s.id?'selected':'')+'>'+e(s.name)+'（'+e(s.ward)+'）</option>').join("")+'</select>'+
+            '<button class="btn" data-map-action="geocode" '+(state.loading?'disabled':'')+'>住所候補を探す</button></div>'+
+            '<p class="map-tiny">候補が表示されない場合も、地図上で位置を指定できます。</p>'+geos+
+            (state.pinCoords?'<div class="map-pending"><strong>位置を確認</strong><span>緯度 '+state.pinCoords[0].toFixed(5)+' / 経度 '+state.pinCoords[1].toFixed(5)+'</span>'+
+              '<button class="btn primary" data-map-action="confirmPin">この場所で登録</button><button class="btn" data-map-action="cancelPin">キャンセル</button></div>':"")+
+          '</div>'+
+        '</details>'+
+        '<details class="map-fallback"><summary>地図が利用できない場合</summary>'+
+          '<p class="hint">外部のGoogleマップで料理・エリアを検索できます。結果は自動でアプリに保存されません。</p>'+
+          '<div class="map-control-buttons"><input id="mapFallbackArea" placeholder="例：北千住、新宿" aria-label="探したいエリア">'+
+          '<button class="btn" data-map-action="searchArea">Googleマップで探す</button></div>'+
+        '</details>'+
+        '<p class="map-credit">地図 © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>。店舗ピンは地図上の位置が確認できた保存店、または明示検索で取得したOpenStreetMapの候補です。位置の正確性や営業状況は保証しません。現在地はボタンを押した時だけ取得します。</p>'+
+        '</section>';
   }
   function loadLeaflet(){
     if(window.L)return Promise.resolve(window.L);
@@ -186,7 +205,7 @@
   function queryForCuisine(){
     const tag=cuisines.find(x=>x.id===state.cuisine)?.q||cuisines[0].q;
     const base=(radius,lat,lon,tagStr)=>'nwr(around:'+radius+','+lat.toFixed(6)+','+lon.toFixed(6)+')'+tagStr+'["name"];';
-    const radius=state.radius,lat=state.coordinates.lat,lon=state.coordinates.lon;
+    const radius=state.radius,lat=state.searchCenter.lat,lon=state.searchCenter.lon;
     const query=base(radius,lat,lon,tag);
     if(state.cuisine==="sweets"){
       return '[out:json][timeout:20];('+query+base(radius,lat,lon,'["amenity"="ice_cream"]')+');out center 90;';
@@ -198,16 +217,19 @@
     const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
     return Math.round(6371000*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)));
   }
-  async function searchNear(){
+  async function searchAround(source){
     const radiusEl=document.getElementById("mapRadius");
     if(radiusEl)state.radius=Number(radiusEl.value)||1000;
     if(Date.now()-state.lastQueryAt<15000){state.error="検索の連続実行は避けてください。前回の結果を確認してからもう一度お試しください。";refresh();return;}
     state.lastQueryAt=Date.now();
-    state.loading=true;state.error="位置情報を取得しています…";state.mode="nearby";state.nearby=[];refresh();
+    state.loading=true;state.error=source==="gps"?"位置情報を確認しています…":"選んだ範囲のお店を検索しています…";state.mode="nearby";state.nearby=[];refresh();
     const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),28000);
     try{
-      state.coordinates=await onGeo();
-      state.lastCenter=[state.coordinates.lat,state.coordinates.lon];state.lastZoom=14;
+      if(source==="gps"){
+        state.coordinates=await onGeo();
+        state.lastCenter=[state.coordinates.lat,state.coordinates.lon];state.lastZoom=14;
+      }
+      state.searchCenter={lat:state.lastCenter[0],lon:state.lastCenter[1]};
       state.error="選んだジャンルの店舗を検索しています…";refresh();
       const query=queryForCuisine(),body=new URLSearchParams({data:query});
       const response=await fetch("https://overpass-api.de/api/interpreter",{method:"POST",body,signal:controller.signal});
@@ -220,11 +242,47 @@
           const p=coords(x.type==="node"?x:x.center),tag=x.tags;
           return {id:x.type+"/"+x.id,name:tag["name:ja"]||tag.name,kind:tag.cuisine||tag.shop||tag.amenity||"飲食店",lat:p[0],lon:p[1],
             ward:[tag["addr:city"],tag["addr:suburb"]].find(t=>t&&WARDS.some(w=>t.includes(w)))||"未設定",
-            distance:distance(state.coordinates.lat,state.coordinates.lon,p[0],p[1])};
+            distance:distance(state.searchCenter.lat,state.searchCenter.lon,p[0],p[1])};
         }).sort((a,b)=>a.distance-b.distance);
       state.error=state.nearby.length?"周辺から"+state.nearby.length+"軒を見つけました。店舗名や営業状況を確認してから保存してください。":"指定ジャンルの登録店は見つかりませんでした。範囲やジャンルを変えて試してください。";
     }catch(err){state.error=err.name==="AbortError"?"検索がタイムアウトしました。":String(err.message||err);}
     finally{clearTimeout(timer);state.loading=false;refresh();}
+  }
+  async function searchAreaText(){
+    const field=document.getElementById("mapQuery");
+    const term=String(field?.value||"").trim().slice(0,120);
+    state.searchTerm=term;
+    if(!term){state.error="駅名・地域・店名を入力してください。";refresh();return;}
+    if(Date.now()-state.searchAt<1700){state.error="検索は少し間隔を空けてお試しください。";refresh();return;}
+    state.searchAt=Date.now();state.loading=true;state.error="地図上の候補を確認しています…";refresh();
+    try{
+      // This lookup only runs when a person submits the search field.
+      // No private visit notes, photo data or personal positions are transmitted.
+      const url="https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q="+encodeURIComponent(term);
+      const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
+      let response;
+      try{response=await fetch(url,{headers:{"Accept":"application/json"},signal:controller.signal});}
+      finally{clearTimeout(timer);}
+      if(!response.ok)throw Error("地図検索サービスを利用できません（"+response.status+"）。");
+      const data=await response.json(),point=Array.isArray(data)?data.find(x=>coords(x)):null;
+      if(!point){state.error="一致する場所が見つかりませんでした。別の駅名や地名で試してください。";return;}
+      state.lastCenter=coords(point);state.lastZoom=15;
+      state.error="検索した場所へ移動しました。店舗は地図上のピンから確認できます。";
+      state.mode="nearby";
+      state.nearby=[];
+    }catch(err){state.error=err.name==="AbortError"?"地図検索がタイムアウトしました。":String(err.message||err);}
+    finally{state.loading=false;refresh();}
+    // Search local OSM venues near the geocoded center on explicit submission.
+    if(state.error.startsWith("検索した場所へ移動"))void searchAround("map");
+  }
+  function showSavedOnMap(shopId){
+    const item=personal().find(s=>s.id===shopId),p=coords(item);
+    if(!p||!map)return;
+    map.setView(p,16);
+    pinLayer?.eachLayer(layer=>{
+      const pt=layer.getLatLng?.();
+      if(pt&&Math.abs(pt.lat-p[0])<.00001&&Math.abs(pt.lng-p[1])<.00001)layer.openPopup?.();
+    });
   }
   async function geocode(){
     const el=document.getElementById("mapShopSelect");
@@ -295,21 +353,37 @@
   render=function(){
     if(map){map.remove();map=null;createdMapFor=null;}
     previousRender();
-    if(ui.tab==="mapsearch")requestAnimationFrame(()=>{if(ui.tab==="mapsearch")mountMap();});
+    if(ui.tab==="mapsearch")requestAnimationFrame(()=>{
+      if(ui.tab!=="mapsearch")return;
+      void mountMap();
+      if(!state.initialNearbyRequested){
+        state.initialNearbyRequested=true;
+        // The first map visit explores only the fixed Tokyo Station map center.
+        // It never requests the user's actual GPS position automatically.
+        setTimeout(()=>{if(ui.tab==="mapsearch")void searchAround("map");},280);
+      }
+    });
   };
   document.addEventListener("change",event=>{
     if(event.target?.id==="mapStatusFilter"){state.filter=event.target.value;refresh();}
-    if(event.target?.id==="mapShopSelect"){state.pinShopId=event.target.value;state.pinCoords=null;state.geocode=[];}
+    if(event.target?.id==="mapShopSelect"){state.pinShopId=event.target.value;state.pinCoords=null;state.geocode=[];state.mode="mine";state.advancedOpen=true;refresh();}
     if(event.target?.id==="mapRadius"){state.radius=Number(event.target.value)||1000;}
   });
+  document.addEventListener("submit",event=>{
+    if(event.target?.id!=="tglMapSearchForm")return;
+    event.preventDefault();void searchAreaText();
+  });
   document.addEventListener("click",event=>{
+    if(event.target?.matches?.(".map-advanced > summary"))state.advancedOpen=!event.target.parentElement.open;
     const btn=event.target.closest("[data-map-action],[data-geo]");
     if(!btn)return;
     if(btn.dataset.geo==="select"){selectGeo(Number(btn.dataset.index));return;}
     switch(btn.dataset.mapAction){
       case "cuisine":state.cuisine=btn.dataset.cuisine||"all";state.error="";refresh();break;
       case "mode":state.mode=btn.dataset.mode||"mine";state.error="";refresh();break;
-      case "nearby":searchNear();break;
+      case "nearby":void searchAround("gps");break;
+      case "searchHere":void searchAround("map");break;
+      case "focusShop":showSavedOnMap(btn.dataset.id);break;
       case "google":openGoogle("nearby");break;
       case "searchArea":openGoogle("area");break;
       case "geocode":geocode();break;
