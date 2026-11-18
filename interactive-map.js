@@ -19,7 +19,7 @@
     cuisine:"all",radius:1000,filter:"all",mode:"nearby",nearby:[],searchTerm:"",searchAt:0,searchCenter:null,
     lastCenter:ORIGIN_VIEW,lastZoom:12,coordinates:null,
     loading:false,error:"",geocode:[],geocodeShopId:null,
-    pinShopId:"",pinCoords:null,lastQueryAt:0,geocodeAt:0
+    pinShopId:"",pinCoords:null,lastQueryAt:0,geocodeAt:0,advancedOpen:false
   };
   let leafletPromise=null,map=null,pinLayer=null,ownMarker=null,createdMapFor=null;
   const e=x=>esc(String(x??""));
@@ -80,7 +80,7 @@
             '</div>'+
           '</div>'+
         '</div>'+
-        '<details class="map-advanced"><summary>保存したお店の位置を登録・管理</summary>'+
+        '<details class="map-advanced" '+(state.advancedOpen?'open':'')+'><summary>保存したお店の位置を登録・管理</summary>'+
           '<div class="map-legend"><span><i class="visited"></i>行った</span><span><i class="wish"></i>行きたい</span><span><i class="nearby"></i>周辺のお店</span>'+
             '<select id="mapStatusFilter" aria-label="保存店の状態で絞り込む">'+mapOptions()+'</select></div>'+
           '<div class="map-pin-register"><h2>保存店の位置を登録</h2><p>位置が未登録の店舗を選び、地図上で正しい場所をタップするか、住所候補から確認してください。初期登録店に座標を推測して追加しません。</p>'+
@@ -205,7 +205,7 @@
   function queryForCuisine(){
     const tag=cuisines.find(x=>x.id===state.cuisine)?.q||cuisines[0].q;
     const base=(radius,lat,lon,tagStr)=>'nwr(around:'+radius+','+lat.toFixed(6)+','+lon.toFixed(6)+')'+tagStr+'["name"];';
-    const radius=state.radius,lat=state.coordinates.lat,lon=state.coordinates.lon;
+    const radius=state.radius,lat=state.searchCenter.lat,lon=state.searchCenter.lon;
     const query=base(radius,lat,lon,tag);
     if(state.cuisine==="sweets"){
       return '[out:json][timeout:20];('+query+base(radius,lat,lon,'["amenity"="ice_cream"]')+');out center 90;';
@@ -217,16 +217,19 @@
     const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
     return Math.round(6371000*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)));
   }
-  async function searchNear(){
+  async function searchAround(source){
     const radiusEl=document.getElementById("mapRadius");
     if(radiusEl)state.radius=Number(radiusEl.value)||1000;
     if(Date.now()-state.lastQueryAt<15000){state.error="検索の連続実行は避けてください。前回の結果を確認してからもう一度お試しください。";refresh();return;}
     state.lastQueryAt=Date.now();
-    state.loading=true;state.error="位置情報を取得しています…";state.mode="nearby";state.nearby=[];refresh();
+    state.loading=true;state.error=source==="gps"?"位置情報を確認しています…":"選んだ範囲のお店を検索しています…";state.mode="nearby";state.nearby=[];refresh();
     const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),28000);
     try{
-      state.coordinates=await onGeo();
-      state.lastCenter=[state.coordinates.lat,state.coordinates.lon];state.lastZoom=14;
+      if(source==="gps"){
+        state.coordinates=await onGeo();
+        state.lastCenter=[state.coordinates.lat,state.coordinates.lon];state.lastZoom=14;
+      }
+      state.searchCenter={lat:state.lastCenter[0],lon:state.lastCenter[1]};
       state.error="選んだジャンルの店舗を検索しています…";refresh();
       const query=queryForCuisine(),body=new URLSearchParams({data:query});
       const response=await fetch("https://overpass-api.de/api/interpreter",{method:"POST",body,signal:controller.signal});
@@ -239,11 +242,47 @@
           const p=coords(x.type==="node"?x:x.center),tag=x.tags;
           return {id:x.type+"/"+x.id,name:tag["name:ja"]||tag.name,kind:tag.cuisine||tag.shop||tag.amenity||"飲食店",lat:p[0],lon:p[1],
             ward:[tag["addr:city"],tag["addr:suburb"]].find(t=>t&&WARDS.some(w=>t.includes(w)))||"未設定",
-            distance:distance(state.coordinates.lat,state.coordinates.lon,p[0],p[1])};
+            distance:distance(state.searchCenter.lat,state.searchCenter.lon,p[0],p[1])};
         }).sort((a,b)=>a.distance-b.distance);
       state.error=state.nearby.length?"周辺から"+state.nearby.length+"軒を見つけました。店舗名や営業状況を確認してから保存してください。":"指定ジャンルの登録店は見つかりませんでした。範囲やジャンルを変えて試してください。";
     }catch(err){state.error=err.name==="AbortError"?"検索がタイムアウトしました。":String(err.message||err);}
     finally{clearTimeout(timer);state.loading=false;refresh();}
+  }
+  async function searchAreaText(){
+    const field=document.getElementById("mapQuery");
+    const term=String(field?.value||"").trim().slice(0,120);
+    state.searchTerm=term;
+    if(!term){state.error="駅名・地域・店名を入力してください。";refresh();return;}
+    if(Date.now()-state.searchAt<1700){state.error="検索は少し間隔を空けてお試しください。";refresh();return;}
+    state.searchAt=Date.now();state.loading=true;state.error="地図上の候補を確認しています…";refresh();
+    try{
+      // This lookup only runs when a person submits the search field.
+      // No private visit notes, photo data or personal positions are transmitted.
+      const url="https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q="+encodeURIComponent(term);
+      const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
+      let response;
+      try{response=await fetch(url,{headers:{"Accept":"application/json"},signal:controller.signal});}
+      finally{clearTimeout(timer);}
+      if(!response.ok)throw Error("地図検索サービスを利用できません（"+response.status+"）。");
+      const data=await response.json(),point=Array.isArray(data)?data.find(x=>coords(x)):null;
+      if(!point){state.error="一致する場所が見つかりませんでした。別の駅名や地名で試してください。";return;}
+      state.lastCenter=coords(point);state.lastZoom=15;
+      state.error="検索した場所へ移動しました。店舗は地図上のピンから確認できます。";
+      state.mode="nearby";
+      state.nearby=[];
+    }catch(err){state.error=err.name==="AbortError"?"地図検索がタイムアウトしました。":String(err.message||err);}
+    finally{state.loading=false;refresh();}
+    // Search local OSM venues near the geocoded center on explicit submission.
+    if(state.error.startsWith("検索した場所へ移動"))void searchAround("map");
+  }
+  function showSavedOnMap(shopId){
+    const item=personal().find(s=>s.id===shopId),p=coords(item);
+    if(!p||!map)return;
+    map.setView(p,16);
+    pinLayer?.eachLayer(layer=>{
+      const pt=layer.getLatLng?.();
+      if(pt&&Math.abs(pt.lat-p[0])<.00001&&Math.abs(pt.lng-p[1])<.00001)layer.openPopup?.();
+    });
   }
   async function geocode(){
     const el=document.getElementById("mapShopSelect");
@@ -318,17 +357,24 @@
   };
   document.addEventListener("change",event=>{
     if(event.target?.id==="mapStatusFilter"){state.filter=event.target.value;refresh();}
-    if(event.target?.id==="mapShopSelect"){state.pinShopId=event.target.value;state.pinCoords=null;state.geocode=[];}
+    if(event.target?.id==="mapShopSelect"){state.pinShopId=event.target.value;state.pinCoords=null;state.geocode=[];state.mode="mine";state.advancedOpen=true;refresh();}
     if(event.target?.id==="mapRadius"){state.radius=Number(event.target.value)||1000;}
   });
+  document.addEventListener("submit",event=>{
+    if(event.target?.id!=="tglMapSearchForm")return;
+    event.preventDefault();void searchAreaText();
+  });
   document.addEventListener("click",event=>{
+    if(event.target?.matches?.(".map-advanced > summary"))state.advancedOpen=!event.target.parentElement.open;
     const btn=event.target.closest("[data-map-action],[data-geo]");
     if(!btn)return;
     if(btn.dataset.geo==="select"){selectGeo(Number(btn.dataset.index));return;}
     switch(btn.dataset.mapAction){
       case "cuisine":state.cuisine=btn.dataset.cuisine||"all";state.error="";refresh();break;
       case "mode":state.mode=btn.dataset.mode||"mine";state.error="";refresh();break;
-      case "nearby":searchNear();break;
+      case "nearby":void searchAround("gps");break;
+      case "searchHere":void searchAround("map");break;
+      case "focusShop":showSavedOnMap(btn.dataset.id);break;
       case "google":openGoogle("nearby");break;
       case "searchArea":openGoogle("area");break;
       case "geocode":geocode();break;
