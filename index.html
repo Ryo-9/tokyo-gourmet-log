@@ -322,6 +322,22 @@
     #tglCloudPanel .status-line{background:var(--panel2);color:var(--fg);border-left-color:var(--accent)}
     @media(max-width:760px){#tglCloudPanel{padding:15px}#tglCloudPanel .inline-links .btn{flex:1;min-width:160px}}
 
+
+    /* iPhone cloud panel: avoid overlapping controls and long email overflow */
+    #tglCloudPanel{min-width:0;max-width:100%;overflow-wrap:anywhere}
+    #tglCloudPanel p{overflow-wrap:anywhere;word-break:normal}
+    #tglCloudPanel .inline-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:stretch;width:100%}
+    #tglCloudPanel .inline-links>.btn{box-sizing:border-box;min-width:0;width:100%;max-width:100%;height:auto;min-height:54px;padding:12px 9px;
+      white-space:normal;overflow-wrap:anywhere;word-break:normal;text-align:center;line-height:1.45;font-size:13px;font-weight:760;letter-spacing:-.02em}
+    #tglCloudPanel .cloud-import-preview .btn{max-width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.5}
+    @media(max-width:700px){
+      #tglCloudPanel .inline-links{grid-template-columns:minmax(0,1fr);gap:9px}
+      #tglCloudPanel .inline-links>.btn{min-height:51px;padding:11px 13px;font-size:14px}
+    }
+    @media(min-width:701px) and (max-width:980px){
+      #tglCloudPanel .inline-links{grid-template-columns:minmax(0,1fr)}
+    }
+
   </style>
 </head>
 <body>
