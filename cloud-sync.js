@@ -61,6 +61,19 @@
       if(ui.tab==="data")render();
     }catch(err){notice="クラウド接続に失敗しました。通信状態を確認してください。";if(ui.tab==="data")render();}
   }
+  // Shared authenticated client for optional friend/group features.
+  // Only publishable browser key is available; all database access obeys RLS.
+  let setupPromise=null;
+  function ready(){
+    if(client)return Promise.resolve(client);
+    if(!setupPromise)setupPromise=setup().then(()=>client).finally(()=>{setupPromise=null;});
+    return setupPromise;
+  }
+  window.TGLCloud={
+    ready,
+    getClient:()=>client,
+    getIdentity:async()=>{const c=await ready();if(!c)throw Error("接続を準備できませんでした");return c.auth.getUser();}
+  };
   function waitClient(){if(!client)throw Error("クラウド接続の準備がまだ完了していません");}
   async function login(email){
     waitClient();
@@ -295,7 +308,7 @@
   const previousRender=render;
   render=function(){
     previousRender();
-    if(ui.tab==="data"&&!initialized){initialized=true;void setup();}
+    if(ui.tab==="data"&&!initialized){initialized=true;void ready();}
   };
   if(/[?#&](?:access_token|refresh_token|code)=/.test(location.hash+location.search)){
     ui.tab="data";render();
