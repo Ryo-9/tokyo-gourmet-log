@@ -6,7 +6,7 @@
   "use strict";
   const state={
     started:false,loading:false,busy:false,ready:false,authSubscribed:false,me:null,
-    groups:[],invites:[],selected:"",places:[],votes:[],
+    groups:[],invites:[],sentInvites:[],selected:"",places:[],votes:[],
     error:"",notice:"",loadVersion:0
   };
   const safe=x=>esc(String(x??""));
@@ -36,7 +36,7 @@
   }
   function placesMarkup(){
     const g=activeGroup();if(!g)return "";
-    const own=isOwner(g),votedById=new Map();
+    const own=isOwner(g),pendingInvites=own?state.sentInvites.filter(i=>i.group_id===g.id&&i.status==="pending"):[],votedById=new Map();
     for(const vote of state.votes){
       if(!vote.choice)continue;
       let a=votedById.get(vote.place_id);
@@ -66,6 +66,7 @@
         '<p class="hint">相手から受け取った「ユーザーコード」を入力してください。メールアドレスから勝手に検索はしません。</p>'+
         '<label class="field"><span>友達のユーザーコード</span><input name="inviteId" autocapitalize="off" required maxlength="36" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"></label>'+
         '<button class="btn" type="submit" '+(state.busy?'disabled':'')+'>招待を送る</button></form>':'')+
+      (own&&pendingInvites.length?'<div class="group-pending-invites"><div class="group-subheading"><strong>未承認の招待</strong><span>'+pendingInvites.length+'件</span></div>'+pendingInvites.map(i=>'<div class="group-place"><div class="group-place-content"><small>ユーザーコード '+safe(i.invited_user_id.slice(0,8))+'…</small></div><button type="button" class="btn tiny danger" data-group="cancelInvite" data-id="'+safe(i.invited_user_id)+'" data-group-id="'+safe(g.id)+'">招待を取り消す</button></div>').join("")+'</div>':"")+
       '<div class="group-manage-actions">'+
       (own?'<button type="button" class="btn danger" data-group="deleteGroup" data-id="'+safe(g.id)+'">グループを削除</button>':
       '<button type="button" class="btn danger" data-group="leaveGroup" data-id="'+safe(g.id)+'">グループを抜ける</button>')+
@@ -109,7 +110,7 @@
         const nextId=session?.user?.id||null,oldId=state.me?.id||null;
         if(nextId===oldId)return;
         state.me=session?.user||null;
-        state.groups=[];state.invites=[];state.selected="";state.places=[];state.votes=[];
+        state.groups=[];state.invites=[];state.sentInvites=[];state.selected="";state.places=[];state.votes=[];
         state.ready=false;state.started=false;state.error="";state.notice="";
         if(document.getElementById("tglGroupsPanel"))queueMicrotask(()=>view());
       });
@@ -123,7 +124,7 @@
     state.loading=true;state.error="";state.notice="";view();
     try{
       const c=await ensureAuth();
-      if(!state.me){state.groups=[];state.invites=[];state.selected="";state.places=[];state.votes=[];state.ready=true;return;}
+      if(!state.me){state.groups=[];state.invites=[];state.sentInvites=[];state.selected="";state.places=[];state.votes=[];state.ready=true;return;}
       const [groupsRes,invRes]=await Promise.all([
         c.from("tgl_groups").select("id,title,description,owner_id,created_at").order("created_at",{ascending:false}).limit(100),
         c.from("tgl_group_invitations").select("group_id,invited_user_id,invited_by,status,created_at")
@@ -134,9 +135,19 @@
       state.groups=groupsRes.data||[];state.invites=invRes.data||[];
       if(!state.groups.some(g=>g.id===state.selected))state.selected=state.groups[0]?.id||"";
       state.ready=true;
+      await loadSentInvites(c);
       await loadDetails(c);
     }catch(err){state.error=String(err.message||err);state.ready=false;}
     finally{state.loading=false;view();}
+  }
+  async function loadSentInvites(c){
+    const owned=state.groups.filter(g=>g.owner_id===state.me?.id).map(g=>g.id);
+    if(!owned.length){state.sentInvites=[];return;}
+    const {data,error}=await c.from("tgl_group_invitations")
+      .select("group_id,invited_user_id,status,created_at").in("group_id",owned)
+      .eq("status","pending").order("created_at",{ascending:false}).limit(100);
+    if(error)throw Error("送信済み招待の取得："+error.message);
+    state.sentInvites=data||[];
   }
   async function loadDetails(c){
     if(!state.selected){state.places=[];state.votes=[];return;}
@@ -176,6 +187,7 @@
     state.groups=groupResult.data||[];
     const invitations=await c.from("tgl_group_invitations").select("group_id,invited_user_id,invited_by,status,created_at").eq("invited_user_id",state.me.id).in("status",["pending","accepted"]).limit(100);
     if(!invitations.error)state.invites=invitations.data||[];
+    await loadSentInvites(c);
     await loadDetails(c);
   }
   async function invite(form){
@@ -186,7 +198,22 @@
     await run(async c=>{
       const {error}=await c.from("tgl_group_invitations").insert({group_id:groupId,invited_user_id:inviteId,invited_by:state.me.id});
       if(error)throw Error("招待を送れません："+error.message);
+      await loadSentInvites(c);
       return "招待を作成しました。相手が「グループ」画面を開くと表示されます。";
+    });
+  }
+  async function cancelInvite(groupId,inviteId){
+    if(!state.groups.some(g=>g.id===groupId&&isOwner(g)))return;
+    if(!state.sentInvites.some(i=>i.group_id===groupId&&i.invited_user_id===inviteId&&i.status==="pending"))return;
+    if(!confirm("まだ承認されていない招待を取り消しますか？"))return;
+    await run(async c=>{
+      const {data,error}=await c.from("tgl_group_invitations").delete()
+        .eq("group_id",groupId).eq("invited_user_id",inviteId).eq("status","pending")
+        .select("invited_user_id");
+      if(error)throw Error("招待取消："+error.message);
+      if(!data?.length)throw Error("既に承認または取り消し済みです。画面を更新してください。");
+      await loadSentInvites(c);
+      return "未承認の招待を取り消しました。";
     });
   }
   async function join(groupId){
@@ -286,6 +313,7 @@
     }
     if(action==="refresh"){void loadAll();return;}
     if(action==="join"){void join(groupId).catch(e=>{state.error=String(e.message||e);view();});return;}
+    if(action==="cancelInvite"){void cancelInvite(b.dataset.groupId,groupId).catch(e=>{state.error=String(e.message||e);view();});return;}
     if(action==="decline"){void decline(groupId).catch(e=>{state.error=String(e.message||e);view();});return;}
     if(action==="vote"){void vote(groupId);return;}
     if(action==="leaveGroup"){void leaveGroup(groupId);return;}
