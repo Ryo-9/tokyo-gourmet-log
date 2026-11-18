@@ -71,6 +71,7 @@
     '<button class="btn" data-action="probeClear">クリア</button></div>'+
     (probe.busy?'<p class="status-line" role="status">画像内の文字を読み取っています。初回は日本語データを取得するため時間がかかる場合があります。</p>':'')+
     (probe.message?'<p class="status-line" role="status">'+safe(probe.message)+'</p>':'')+
+    (probe.link&&/^https?:\/\//i.test(probe.link)?'<p><a class="btn" href="'+safe(probe.link)+'" target="_blank" rel="noopener noreferrer">元のリンクを開いて店名を確認 ↗</a></p>':'')+
     (probe.results.length?'<h3 class="discovery-heading">見つかった候補</h3>'+probe.results.map(s=>
       '<div class="found-shop"><div><strong>'+safe(s.name)+'</strong><small>'+safe(s.ward)+' · '+safe(s.genre)+'</small></div>'+
       '<div class="inline-links"><button class="btn tiny primary" data-action="probeSaveExisting" data-id="'+safe(s.id)+'">♡ 保存</button>'+
@@ -80,7 +81,7 @@
     '<p class="hint">東京23区230店舗以外でも、確認できた店名を自分のリストに追加できます。</p>'+
     '<div class="inline-links"><button class="btn" data-action="probeOpenMap" data-name="'+safe(probe.hint||probe.name||probe.text.slice(0,35)||"東京 飲食店")+'">Googleマップで確認 ↗</button>'+
     '<button class="btn primary" data-action="probeSaveNew">店名を確認して保存</button></div>'+
-    '<p class="hint" style="margin-top:13px">画像の文字認識は端末内で実行しますが、初回に外部CDNからOCRライブラリ・言語データを取得します。SNSのURLだけから動画内容は読み取れません。</p>'+
+    '<p class="hint" style="margin-top:13px">画像の文字認識は端末内で実行しますが、初回に外部CDNからOCRライブラリ・言語データを取得します。Googleマップの短縮URLは直接解析できないため、元リンクを開いて店名を確認してください。SNSのURLだけから動画内容は読み取れません。</p>'+
     '</section>';
   }
   function osmPanel(){
