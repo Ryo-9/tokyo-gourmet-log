@@ -3,14 +3,37 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#fffaf6" />
+  <meta name="theme-color" content="#f7f8fa" />
+
+  <script>
+    (function(){
+      var key='tgl-appearance-v1';
+      var preference='system';
+      try { preference=localStorage.getItem(key)||'system'; } catch(e){}
+      var media=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
+      function resolve(mode){return mode==='dark'||(mode==='system'&&media&&media.matches)?'dark':'light'}
+      window.__tglApplyTheme=function(mode,save){
+        var actual=resolve(mode);
+        document.documentElement.dataset.theme=actual;
+        document.documentElement.style.colorScheme=actual;
+        var m=document.querySelector('meta[name="theme-color"]');
+        if(m)m.setAttribute('content',actual==='dark'?'#111216':'#f7f8fa');
+        if(save){try{localStorage.setItem(key,mode)}catch(e){}}
+      };
+      window.__tglApplyTheme(preference,false);
+      if(media&&media.addEventListener)media.addEventListener('change',function(){
+        var p='system';try{p=localStorage.getItem(key)||'system'}catch(e){}
+        if(p==='system')window.__tglApplyTheme('system',false);
+      });
+    })();
+  </script>
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Gourmet Log" />
-  <meta name="description" content="東京23区東京23区のグルメ記録。TikTokのリンクから気になるお店を見つけ、地図で確認して保存するWebアプリ" />
+  <meta name="description" content="東京23区のグルメ記録。TikTokのリンクから気になるお店を見つけ、地図で確認して保存するWebアプリ" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" type="image/svg+xml" href="icon.svg" />
-  <title>TOKYO GOURMET LOG 3.0 — たべたいを、みつけよう</title>
+  <title>TOKYO GOURMET LOG — たべたいを、みつけよう</title>
   <style>
     :root{color-scheme:dark;--bg:#0d0f11;--panel:#171a1e;--panel2:#1d2126;--border:#30363d;--fg:#f4f3ef;--muted:#9ba4af;--accent:#d6b995;--accent2:#947659;--teal:#8fcdb8;--danger:#ff928e;--radius:16px}
     *{box-sizing:border-box} html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP",Meiryo,sans-serif;font-size:14px;line-height:1.6}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.4;cursor:default}a{color:inherit;text-decoration:none}input,textarea,select{color:var(--fg);background:var(--panel2);border:1px solid var(--border);border-radius:11px;outline:0;min-height:43px;padding:10px 13px;width:100%}select{appearance:auto}input:focus,textarea:focus,select:focus{border-color:var(--accent)}textarea{resize:vertical;min-height:92px} .hidden{display:none!important}
@@ -33,6 +56,119 @@
     .photo-open{width:100%;height:100%;display:block;padding:0;border:0;background:transparent}.photo-viewer-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 17px}.photo-viewer-image{max-width:min(90vw,700px);width:100%;max-height:75vh;object-fit:contain;display:block;background:#222}#photoViewer{width:min(96vw,720px);max-width:720px}
     @media(max-width:760px){.main{padding:17px 14px 110px}.list-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.shop .shop-content{padding:10px}.shop .shop-name{font-size:14px;min-height:40px}.shop .shop-genre{font-size:11px;line-height:1.3}.shop .chip{font-size:10px;padding:5px 7px}.shop .shop-bottom{gap:4px;flex-wrap:wrap}.shop .shop-bottom .btn{padding:5px 8px;font-size:10px}.shop .shop-bottom .btn:last-child{display:none}.food-icon{font-size:40px}.welcome{margin-bottom:18px}.filter-grid{grid-template-columns:1fr 1fr}.filter-search{grid-column:1/-1}.control-foot{align-items:flex-start;flex-direction:column}.controls{padding:13px}.stats{grid-template-columns:repeat(2,1fr)}.modal-body{padding:16px}.modal-head{padding:16px}.photo-gallery{grid-template-columns:repeat(3,1fr)}}
     @media(max-width:350px){.list-grid{grid-template-columns:1fr}.shop .shop-bottom .btn:last-child{display:inline-flex}}
+
+
+    /* v3.1: neutral editorial theme — modern, photo-first light/dark modes */
+    :root {
+      color-scheme:light;
+      --bg:#f7f8fa; --panel:#ffffff; --panel2:#f1f2f5; --border:#e4e6eb;
+      --fg:#181a20; --muted:#626978; --accent:#d92756; --accent2:#b82349;
+      --teal:#087e63; --danger:#b52548; --radius:16px;
+      --surface-raised:#ffffff; --soft-shadow:0 5px 20px #10121608; --placeholder:#e9ebef;
+    }
+    :root[data-theme="dark"] {
+      color-scheme:dark;
+      --bg:#111216; --panel:#1d1e23; --panel2:#282a30; --border:#373940;
+      --fg:#f4f4f6; --muted:#b0b3bd; --accent:#ff6589; --accent2:#ff8aa2;
+      --teal:#62d2b6; --danger:#ff8c9a; --radius:16px;
+      --surface-raised:#23242a; --soft-shadow:0 6px 24px #0000002c; --placeholder:#30333a;
+    }
+    html,body{background:var(--bg)!important;color:var(--fg)!important}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;letter-spacing:-.006em}
+    .main{background:transparent}
+    .theme-toolbar{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin:-3px 0 12px;min-height:40px}
+    .theme-toolbar .theme-label{color:var(--muted);font-size:11px;font-weight:600;letter-spacing:.02em}
+    .theme-toggle{display:inline-flex;align-items:center;gap:7px;background:var(--panel);color:var(--fg);border:1px solid var(--border);border-radius:999px;padding:7px 12px;min-height:38px;font-size:12px;font-weight:750;box-shadow:var(--soft-shadow)}
+    .theme-toggle .theme-symbol{font-size:16px;line-height:1}
+    .theme-toggle:hover{border-color:var(--accent)}
+    :is(button,input,select,textarea,a):focus-visible{outline:3px solid var(--accent)!important;outline-offset:3px}
+    .side{background:var(--panel)!important;border-color:var(--border)!important}
+    .brand-title{color:var(--fg)!important}.brand-small,.eyebrow,.shop .shop-ward{color:var(--accent)!important}
+    .brand-mark{background:var(--panel2)!important;color:var(--accent)!important}
+    .nav-item:hover{background:var(--panel2)!important;color:var(--fg)!important}
+    .nav-item.active{background:var(--panel2)!important;color:var(--accent)!important;box-shadow:inset 3px 0 0 var(--accent)!important}
+    .welcome,.stat,.controls,.panel,.shop,.history-card,.social-result,.social-match,.big-empty,
+    .privacy-note,.social-hero,.hero,.discover-card,.nearby-panel,.data-preview{
+      background:var(--panel)!important;color:var(--fg)!important;border:1px solid var(--border)!important;box-shadow:var(--soft-shadow)!important
+    }
+    .welcome{border-radius:20px;padding:20px}
+    .welcome h1{color:var(--fg)!important;letter-spacing:-.04em}
+    .welcome p,.lead,.hero-desc,.social-hero p,.nearby-panel p,.nearby-panel small,
+    .stat-label,.stat-detail,.shop .shop-genre,.visit-meta,.visit-note,.privacy-note,
+    .info-note,.muted,.photo-hint,.foot{color:var(--muted)!important}
+    .welcome-sub{color:var(--accent)!important;letter-spacing:.09em}
+    .stat-num{color:var(--fg)!important}.stat-detail{font-size:11px}
+    .stat{border-radius:15px}.stats{gap:9px}
+    .btn,.btn.ghost,.social-kpis .btn{background:var(--panel);color:var(--fg);border:1px solid var(--border);border-radius:11px}
+    .btn.primary,.btn-gold{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important}
+    :root[data-theme="dark"] .btn.primary,:root[data-theme="dark"] .btn-gold{color:#16151b!important}
+    .btn.primary:hover{filter:brightness(.94)}.btn:hover{border-color:var(--muted)}
+    .btn.danger{color:var(--danger);border-color:var(--border)}
+    .btn.olive{color:var(--teal);border-color:var(--border)}
+    .settings-button{background:var(--panel2)!important;color:var(--fg)!important;min-width:44px;min-height:44px}
+    .action-tile.coral,.action-tile.mint,.action-tile.yellow{
+      background:var(--panel2)!important;color:var(--fg)!important;border:1px solid var(--border);
+      border-radius:15px;box-shadow:none;transition:transform .12s ease,border-color .12s ease
+    }
+    .action-tile:active{transform:scale(.975)}
+    .action-tile span{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;
+      background:var(--panel);color:var(--accent);border:1px solid var(--border)}
+    .action-tile small{color:var(--muted)!important;font-size:10px}
+    .action-tile b{font-size:12px;letter-spacing:-.02em}
+    .home-title,.section-title h2,.hero-heading,.shop .shop-name,.panel h3{color:var(--fg)!important}
+    .genre-chips button,.chip{background:var(--panel)!important;color:var(--fg)!important;border:1px solid var(--border)!important}
+    .genre-chips button:active,.genre-chips button:hover{border-color:var(--accent)!important;color:var(--accent)!important}
+    .chip.wish{background:var(--panel2)!important;color:var(--accent)!important;border-color:var(--accent)!important}
+    .chip.visited{background:var(--panel2)!important;color:var(--teal)!important;border-color:var(--border)!important}
+    .controls{border-radius:17px}.shop{border-radius:16px;transition:transform .15s ease,box-shadow .15s ease}
+    .shop:hover{transform:translateY(-2px);border-color:var(--border)!important}
+    .food-photo.no-photo,.shop:nth-child(3n+2) .food-photo.no-photo,.shop:nth-child(3n+3) .food-photo.no-photo{
+      background:linear-gradient(145deg,var(--placeholder),var(--panel2))!important
+    }
+    .food-icon{opacity:.87;filter:saturate(.9)}
+    .photo-label,.food-photo.no-photo .photo-label{
+      color:var(--fg)!important;background:var(--panel)!important;border:1px solid var(--border)
+    }
+    .shop .shop-name{font-weight:770}.shop .shop-bottom .btn{background:var(--panel2)}
+    .info-note{border-left-color:var(--accent)}
+    input,textarea,select{background:var(--panel2)!important;color:var(--fg)!important;border:1px solid var(--border)!important}
+    input::placeholder,textarea::placeholder{color:var(--muted);opacity:.9}
+    input:focus,textarea:focus,select:focus{border-color:var(--accent)!important}
+    dialog{background:var(--panel)!important;color:var(--fg)!important;border:1px solid var(--border)!important;box-shadow:0 18px 80px #0006!important}
+    dialog::backdrop{background:#0009}
+    .modal-head{border-color:var(--border)!important}
+    .close{background:var(--panel2)!important;color:var(--fg)!important;min-height:40px;min-width:40px}
+    .field>span{color:var(--fg)!important}
+    .history-card{border-radius:13px}
+    .photo-upload{background:var(--panel2)!important;color:var(--accent)!important}
+    .photo-hint{background:var(--panel2)!important}
+    .photo-tile{border:1px solid var(--border)}
+    .sns-tag,.small-title,.social-link{color:var(--accent)!important}
+    .social-match-title{color:var(--fg)!important}
+    .source-chip{border-color:var(--border)!important;color:var(--accent)!important;background:var(--panel2)}
+    .toast{background:var(--fg)!important;color:var(--bg)!important;box-shadow:0 12px 35px #0004}
+    .progress-row .track{background:var(--panel2)}.progress-row .fill{background:var(--accent)}
+    .kbd{background:var(--panel2);color:var(--fg)}
+    .social-form-grid{color:var(--fg)}
+    .bottom-nav{background:var(--panel)!important;border-top:1px solid var(--border)!important;
+      box-shadow:0 -5px 22px #0000000a!important}
+    .bottom-nav button{color:var(--muted)!important;min-height:52px}
+    .bottom-nav button.active{color:var(--accent)!important;font-weight:800}
+    :root[data-theme="dark"] .bottom-nav{box-shadow:0 -5px 20px #0005!important}
+    :root[data-theme="dark"] .btn.primary,:root[data-theme="dark"] .btn-gold{color:#18171c!important}
+    @media(max-width:760px){
+      .main{padding-top:10px}
+      .theme-toolbar{margin:0 0 12px}
+      .welcome{padding:17px}
+      .welcome-actions{gap:8px}
+      .action-tile{min-height:103px;padding:11px 7px}
+      .food-icon{font-size:36px}
+      .bottom-nav{padding-top:4px}
+    }
+    @media(prefers-reduced-motion:reduce){
+      html{scroll-behavior:auto}
+      *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+    }
 
   </style>
 </head>
@@ -100,7 +236,8 @@
     function randomShop(){let list=getShops().filter(s=>statusOf(s)==='new');if(!list.length)list=getShops();return list[Math.floor(Math.random()*list.length)]}
     function discover(){let s=getShop(ui.discoverId);if(!s){s=randomShop();ui.discoverId=s?.id}const ss=stats();let regions=REGIONS.map(r=>{let total=getShops().filter(s=>s.region===r).length,done=getShops().filter(s=>s.region===r&&statusOf(s)==='visited').length;return {r,total,done}});let topVisits=getShops().filter(s=>getVisits(s.id).some(v=>+v.rating>=4)).slice(0,4);return pageHeader('DISCOVER / YOUR NEXT BITE','まだ知らない、おいしさへ。','未訪問のお店からランダムで一軒ご提案。')+`<div class="hero"><div class="eyebrow">SPONTANEOUS DINNER</div><div class="hero-heading">いつもと違う街、<br>まだ知らない料理。</div><p class="hero-desc">検索条件を決めずに選んでみるのも、食べ歩きの楽しみ。ランダム抽選は未訪問のお店を優先します。</p><div class="hero-actions"><button class="btn primary" data-action="reroll">✦ もう一軒、発掘する</button><button class="btn" data-tab="explore">店舗を一覧で探す</button></div></div>${s?`<div class="discover-card"><div class="eyebrow">TODAY'S PICK</div><div style="margin-top:10px">${tag(statusOf(s))}</div><div class="shop-name">${esc(s.name)}</div><p class="muted">${esc(s.ward)} ・ ${esc(s.genre)}</p><div class="hero-actions"><button class="btn primary" data-action="wish" data-id="${esc(s.id)}">♡ 行きたいに登録</button><button class="btn" data-action="detail" data-id="${esc(s.id)}">詳しく見る</button><button class="btn ghost" data-action="map" data-id="${esc(s.id)}">↗ 地図を見る</button></div></div>`:''}<div class="two-col"><div class="panel"><h3>エリア別の達成率</h3>${regions.map(r=>`<div class="progress-row"><span>${r.r}</span><div class="track"><div class="fill" style="width:${r.total?Math.round(r.done/r.total*100):0}%"></div></div><span>${r.done}/${r.total}</span></div>`).join('')}</div><div class="panel"><h3>あなたのグルメログ</h3><p>訪問済み：<strong style="color:var(--accent)">${ss.visited}</strong>軒 / 訪問記録：<strong>${ss.logs}</strong>件</p><p>平均評価：<strong>${ss.avg}</strong> / 5</p><div class="divider"></div><h3>高評価のお店</h3>${topVisits.length?topVisits.map(x=>`<p><button class="small-link" data-action="detail" data-id="${esc(x.id)}">${esc(x.name)}</button> <span class="muted">${esc(x.ward)}</span></p>`).join(''):'<p>訪問記録で星4以上を付けると、ここに表示されます。</p>'}</div></div>`}
     function dataPage(){return pageHeader('YOUR DATA / YOUR OWNERSHIP','記録を、安全に持ち運ぶ。','保存内容のバックアップと、ChatGPTへの共有を管理します。')+`<div class="two-col"><div class="panel"><div class="eyebrow">CHATGPT CONNECTION</div><h3 style="margin-top:11px">このチャットに相談する</h3><p>行きたいお店・訪問済み・評価を読みやすいテキストにまとめます。ボタンを押してコピー後、ChatGPTの会話に貼り付けてください。</p><button class="btn primary" data-action="share">相談用テキストをコピー</button><p class="hint">この機能は手動共有です。ChatGPTへの自動同期や会話の読み取りは行いません。</p></div><div class="panel"><div class="eyebrow">BACKUP & RESTORE</div><h3 style="margin-top:11px">JSONバックアップ</h3><p>訪問メモ・評価・行きたい登録を含むデータを保存できます。写真は端末内の別保存領域にあり、JSONには含まれません。別の端末への引き継ぎやChatGPTとのデータ交換に利用できます。</p><div class="inline-links"><button class="btn" data-action="export">データを書き出す</button><button class="btn" data-action="import">データを取り込む</button></div><div class="divider"></div><h3>写真のバックアップ</h3><p>登録した写真は別ファイルで書き出し・取り込みできます。スマホの機種変更前にデータと写真の両方を保存してください。</p><div class="inline-links"><button class="btn" data-action="exportPhotos">写真を書き出す</button><label class="btn photo-upload" style="cursor:pointer">写真を取り込む<input type="file" id="photoImportFile" accept=".json,application/json" hidden></label></div><p class="hint">データは現在のブラウザ内に保存されます。異なる端末間で自動同期しません。</p></div></div><div class="section-title"><h2>保存状態の確認</h2></div>${statsHtml()}<div class="panel"><h3>データの取り扱い</h3><p>アカウントを作成しなくても利用できます。ブラウザのデータを削除すると記録が失われることがあるため、定期的にJSONを書き出してください。</p><p>インポートはプレビュー・確認後に実行します。重複する店舗はIDを基準に統合し、インポート前に自動バックアップをダウンロードします。</p><p>新しい店舗はご自身で追加できます。店舗情報は公開・営業中を保証するものではありません。</p></div><div class="foot">TOKYO GOURMET LOG / v3.0 · 日本語 · 個人利用のための試作Webアプリ</div>`}
-    function render(){renderNav();document.getElementById('main').innerHTML=ui.tab==='explore'?explore():ui.tab==='sns'?socialPage():ui.tab==='mapsearch'?mapSearchPage():ui.tab==='wishlist'||ui.tab==='visited'?savedView():ui.tab==='discover'?discover():dataPage();}
+    function themeToolbar(){const dark=document.documentElement.dataset.theme==='dark';return '<div class="theme-toolbar"><span class="theme-label">表示モード</span><button type="button" class="theme-toggle" data-action="toggleTheme" aria-label="'+(dark?'ライトモードに切り替える':'ダークモードに切り替える')+'"><span class="theme-symbol" aria-hidden="true">'+(dark?'☀':'☾')+'</span><span>'+(dark?'ライト':'ダーク')+'に切替</span></button></div>';}
+    function render(){renderNav();const page=ui.tab==='explore'?explore():ui.tab==='sns'?socialPage():ui.tab==='mapsearch'?mapSearchPage():ui.tab==='wishlist'||ui.tab==='visited'?savedView():ui.tab==='discover'?discover():dataPage();document.getElementById('main').innerHTML=themeToolbar()+page;}
     function switchTab(t){if(!NAV.some(n=>n[0]===t)&&t!=='discover'&&t!=='data')return;ui.tab=t;ui.page=1;ui.status='all';ui.keyword='';ui.ward='all';ui.region='all';ui.genre='all';render();scrollTo({top:0,behavior:'smooth'})}
     function clearFilters(){ui={...ui,keyword:'',region:'all',ward:'all',genre:'all',sort:'name',status:'all',page:1};render()}
     function showDialog(id,html){let d=document.getElementById(id);d.innerHTML=html;if(!d.open)d.showModal()}
@@ -170,6 +307,13 @@
       if(action==='nearMe'){if(!navigator.geolocation){toast('この端末では位置情報を使えません');return}toast('位置情報の利用確認を表示します');navigator.geolocation.getCurrentPosition(position=>{const kind=b.dataset.kind||'飲食店';const q=`${kind} near ${position.coords.latitude},${position.coords.longitude}`;window.location.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q)},()=>toast('位置情報を取得できませんでした。エリアを指定して検索できます。'),{enableHighAccuracy:false,timeout:9000,maximumAge:60000});return}
     });
     document.addEventListener('change',async e=>{if(e.target.id==='photoImportFile'){await importPhotoBackup(e.target.files?.[0]);e.target.value='';return}if(e.target.id==='photoUpload'){const shopId=e.target.dataset.shop;for(const f of Array.from(e.target.files||[]).slice(0,8))await addPhotoFile(shopId,f);e.target.value=''}});
+    document.addEventListener('click',function(event){
+      const themeButton=event.target.closest('[data-action="toggleTheme"]');
+      if(!themeButton)return;
+      const next=document.documentElement.dataset.theme==='dark'?'light':'dark';
+      window.__tglApplyTheme(next,true);
+      render();
+    });
     render();
     loadPhotos();
   </script>
