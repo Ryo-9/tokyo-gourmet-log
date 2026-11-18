@@ -77,7 +77,7 @@ grant update(choice) on public.tgl_group_votes to authenticated;
 create policy tgl_groups_read on public.tgl_groups for select to authenticated
   using (owner_id=(select auth.uid())
     or exists (select 1 from public.tgl_group_members m
-      where m.group_id=id and m.user_id=(select auth.uid())));
+      where m.group_id=tgl_groups.id and m.user_id=(select auth.uid())));
 create policy tgl_groups_create on public.tgl_groups for insert to authenticated
   with check (owner_id=(select auth.uid()));
 create policy tgl_groups_edit on public.tgl_groups for update to authenticated
@@ -88,16 +88,16 @@ create policy tgl_groups_remove on public.tgl_groups for delete to authenticated
 -- Invitation is visible only to the recipient or group owner.
 create policy tgl_invitations_read on public.tgl_group_invitations for select to authenticated
   using(invited_user_id=(select auth.uid()) or exists (
-    select 1 from public.tgl_groups g where g.id=group_id and g.owner_id=(select auth.uid())));
+    select 1 from public.tgl_groups g where g.id=tgl_group_invitations.group_id and g.owner_id=(select auth.uid())));
 create policy tgl_invitations_create on public.tgl_group_invitations for insert to authenticated
   with check(status='pending' and invited_by=(select auth.uid()) and invited_user_id<>(select auth.uid())
-    and exists (select 1 from public.tgl_groups g where g.id=group_id and g.owner_id=(select auth.uid())));
+    and exists (select 1 from public.tgl_groups g where g.id=tgl_group_invitations.group_id and g.owner_id=(select auth.uid())));
 create policy tgl_invitations_respond on public.tgl_group_invitations for update to authenticated
   using(invited_user_id=(select auth.uid()) and status='pending')
   with check(invited_user_id=(select auth.uid()) and status in ('accepted','declined'));
 create policy tgl_invitations_remove on public.tgl_group_invitations for delete to authenticated
   using(invited_user_id=(select auth.uid()) or exists (
-    select 1 from public.tgl_groups g where g.id=group_id and g.owner_id=(select auth.uid())));
+    select 1 from public.tgl_groups g where g.id=tgl_group_invitations.group_id and g.owner_id=(select auth.uid())));
 
 -- No one gets added to a group without accepting their invitation.
 create policy tgl_members_read_self on public.tgl_group_members for select to authenticated
@@ -105,36 +105,36 @@ create policy tgl_members_read_self on public.tgl_group_members for select to au
 create policy tgl_members_join_self on public.tgl_group_members for insert to authenticated
   with check(user_id=(select auth.uid()) and exists (
     select 1 from public.tgl_group_invitations i
-    where i.group_id=group_id and i.invited_user_id=(select auth.uid()) and i.status='accepted'));
+    where i.group_id=tgl_group_members.group_id and i.invited_user_id=(select auth.uid()) and i.status='accepted'));
 create policy tgl_members_leave_or_remove on public.tgl_group_members for delete to authenticated
   using(user_id=(select auth.uid()) or exists (
-    select 1 from public.tgl_groups g where g.id=group_id and g.owner_id=(select auth.uid())));
+    select 1 from public.tgl_groups g where g.id=tgl_group_members.group_id and g.owner_id=(select auth.uid())));
 
 -- Only group participants see nominated businesses, not private visit logs.
 create policy tgl_group_places_read on public.tgl_group_places for select to authenticated
-  using(exists(select 1 from public.tgl_groups g where g.id=group_id and g.owner_id=(select auth.uid()))
-    or exists(select 1 from public.tgl_group_members m where m.group_id=group_id and m.user_id=(select auth.uid())));
+  using(exists(select 1 from public.tgl_groups g where g.id=tgl_group_places.group_id and g.owner_id=(select auth.uid()))
+    or exists(select 1 from public.tgl_group_members m where m.group_id=tgl_group_places.group_id and m.user_id=(select auth.uid())));
 create policy tgl_group_places_create on public.tgl_group_places for insert to authenticated
   with check(added_by=(select auth.uid()) and
-   (exists(select 1 from public.tgl_groups g where g.id=group_id and g.owner_id=(select auth.uid()))
-    or exists(select 1 from public.tgl_group_members m where m.group_id=group_id and m.user_id=(select auth.uid()))));
+   (exists(select 1 from public.tgl_groups g where g.id=tgl_group_places.group_id and g.owner_id=(select auth.uid()))
+    or exists(select 1 from public.tgl_group_members m where m.group_id=tgl_group_places.group_id and m.user_id=(select auth.uid()))));
 create policy tgl_group_places_edit on public.tgl_group_places for update to authenticated
   using(added_by=(select auth.uid()) or exists(
-    select 1 from public.tgl_groups g where g.id=group_id and g.owner_id=(select auth.uid())))
+    select 1 from public.tgl_groups g where g.id=tgl_group_places.group_id and g.owner_id=(select auth.uid())))
   with check(added_by=(select auth.uid()) or exists(
-    select 1 from public.tgl_groups g where g.id=group_id and g.owner_id=(select auth.uid())));
+    select 1 from public.tgl_groups g where g.id=tgl_group_places.group_id and g.owner_id=(select auth.uid())));
 create policy tgl_group_places_remove on public.tgl_group_places for delete to authenticated
   using(added_by=(select auth.uid()) or exists(
-    select 1 from public.tgl_groups g where g.id=group_id and g.owner_id=(select auth.uid())));
+    select 1 from public.tgl_groups g where g.id=tgl_group_places.group_id and g.owner_id=(select auth.uid())));
 
 -- Participants may read votes within their group; only change their own.
 create policy tgl_group_votes_read on public.tgl_group_votes for select to authenticated
-  using(exists(select 1 from public.tgl_groups g where g.id=group_id and g.owner_id=(select auth.uid()))
-    or exists(select 1 from public.tgl_group_members m where m.group_id=group_id and m.user_id=(select auth.uid())));
+  using(exists(select 1 from public.tgl_groups g where g.id=tgl_group_votes.group_id and g.owner_id=(select auth.uid()))
+    or exists(select 1 from public.tgl_group_members m where m.group_id=tgl_group_votes.group_id and m.user_id=(select auth.uid())));
 create policy tgl_group_votes_create on public.tgl_group_votes for insert to authenticated
   with check(user_id=(select auth.uid()) and
-    (exists(select 1 from public.tgl_groups g where g.id=group_id and g.owner_id=(select auth.uid()))
-    or exists(select 1 from public.tgl_group_members m where m.group_id=group_id and m.user_id=(select auth.uid()))));
+    (exists(select 1 from public.tgl_groups g where g.id=tgl_group_votes.group_id and g.owner_id=(select auth.uid()))
+    or exists(select 1 from public.tgl_group_members m where m.group_id=tgl_group_votes.group_id and m.user_id=(select auth.uid()))));
 create policy tgl_group_votes_edit on public.tgl_group_votes for update to authenticated
   using(user_id=(select auth.uid())) with check(user_id=(select auth.uid()));
 create policy tgl_group_votes_remove on public.tgl_group_votes for delete to authenticated
