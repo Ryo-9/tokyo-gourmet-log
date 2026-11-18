@@ -189,6 +189,55 @@
     .osm-discovery select{width:auto}.osm-discovery .inline-links{gap:8px}
     .osm-discovery .hint,.image-discovery .hint{color:var(--muted);font-size:11px;line-height:1.7}
     @media(max-width:760px){.image-discovery,.osm-discovery{padding:15px!important}.discovery-title{font-size:19px}.found-shop{flex-wrap:wrap;gap:7px}.found-shop .inline-links{width:100%;justify-content:flex-end}.osm-discovery .inline-links{flex-wrap:wrap}}
+
+    /* private-first social sharing, friend collections and food moments */
+    .hub-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;background:var(--panel2);border:1px solid var(--border);padding:5px;border-radius:16px;margin:0 0 18px;position:sticky;top:0;z-index:20}
+    .hub-tabs button{font:inherit;border:0;border-radius:11px;min-height:44px;padding:10px 5px;background:transparent;color:var(--muted);font-size:12px;font-weight:750}
+    .hub-tabs button.active{background:var(--panel);color:var(--fg);box-shadow:var(--soft-shadow)}
+    .share-hub,.moment-panel{display:block;color:var(--fg)}.share-hub{margin-bottom:20px}
+    .share-head{padding:19px 20px;background:var(--panel);border:1px solid var(--border);border-radius:20px;margin:0 0 12px}
+    .share-eyebrow{font-size:10px;color:var(--accent);letter-spacing:.09em;font-weight:850;margin-bottom:5px}
+    .share-head h2{font-size:24px;font-weight:850;letter-spacing:-.035em;line-height:1.4;margin:0 0 5px}
+    .share-head p{color:var(--muted);font-size:13px;line-height:1.6;margin:0}
+    .share-scope{display:flex;gap:5px;flex-wrap:wrap;margin:10px 0}
+    .share-scope span{display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:999px;background:var(--panel);padding:7px 10px;color:var(--muted);font-size:11px;font-weight:690}
+    .share-note{background:var(--panel2);border-radius:12px;padding:12px 14px;color:var(--muted);font-size:11px;line-height:1.65;margin:12px 0}
+    .share-panel,.share-received,.share-list-card,.moment-panel{background:var(--panel);border:1px solid var(--border);border-radius:17px;padding:17px;margin:13px 0;box-shadow:var(--soft-shadow)}
+    .share-panel h3,.moment-panel h3{font-size:17px;margin:0 0 12px;font-weight:830}
+    .share-panel-heading,.share-list-card-head,.share-received-head{display:flex;justify-content:space-between;gap:10px;align-items:start}
+    .share-panel-heading small,.share-list-card-head small{font-size:11px;color:var(--muted)}
+    .share-panel .field{margin:9px 0 14px}.share-panel .field span{display:block;color:var(--fg);margin-bottom:5px;font-size:12px}
+    .share-picks{max-height:280px;overflow:auto;border:1px solid var(--border);border-radius:13px;background:var(--panel2);padding:7px}
+    .share-pick,.share-received-row{display:flex;gap:11px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);padding:9px 6px}
+    .share-pick:last-child,.share-received-row:last-child{border:0}
+    .share-pick strong,.share-received-row strong{display:block;color:var(--fg);font-size:12px;font-weight:750;line-height:1.55}
+    .share-pick small,.share-received-row small{display:block;color:var(--muted);font-size:11px}
+    .share-pick .btn,.share-received-row .btn{min-height:36px;padding:7px 9px;font-size:11px}
+    .share-pick.selected{background:var(--panel2);padding:11px;border-radius:10px;margin-bottom:6px;border:1px solid var(--border)}
+    .share-panel h4{font-size:12px;margin:12px 0 9px;color:var(--muted)}
+    .share-list-card-head strong,.share-received-head strong{display:block;font-size:15px;color:var(--fg);font-weight:850;line-height:1.5}
+    .share-list-card p,.share-received p{font-size:12px;color:var(--muted)}
+    .share-list-shopnames{display:flex;gap:5px;flex-wrap:wrap;margin:10px 0}
+    .share-list-shopnames span{background:var(--panel2);padding:5px 8px;border-radius:7px;font-size:11px;color:var(--fg)}
+    .share-list-card .inline-links{gap:6px}.share-list-card .btn{min-height:40px}
+    .share-received-row{flex-wrap:wrap}.share-received-row .inline-links{gap:5px}
+    .share-received-head .chip{white-space:nowrap}
+    .share-home-cta{display:flex;gap:13px;justify-content:space-between;align-items:center;padding:15px;margin:0 0 18px;background:var(--panel);border:1px solid var(--border);border-radius:16px;box-shadow:var(--soft-shadow)}
+    .share-home-cta strong{display:block;font-size:14px;color:var(--fg);font-weight:830}
+    .share-home-cta small{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+    .share-home-cta .btn{flex-shrink:0}
+    .moment-panel{padding:20px}.moment-panel .muted{font-size:13px;line-height:1.6}.moment-panel .field{margin:13px 0}
+    .moment-photo{display:block;width:100%;max-height:300px;object-fit:contain;border-radius:13px;margin:12px 0;border:1px solid var(--border)}
+    @media(max-width:760px){
+      .hub-tabs{top:0;grid-template-columns:repeat(3,1fr)}
+      .hub-tabs button{font-size:11px;line-height:1.2;padding:10px 4px}
+      .share-head{padding:17px}.share-head h2{font-size:21px}
+      .share-panel,.share-list-card,.share-received,.moment-panel{padding:14px}
+      .share-received-row .inline-links{width:100%;justify-content:flex-end}
+      .share-home-cta{padding:13px;flex-wrap:wrap}
+      .share-home-cta .btn{width:100%}
+    }
+
   </style>
 </head>
 <body>
@@ -337,5 +386,6 @@
     loadPhotos();
   </script>
   <script src="./discovery.js"></script>
+  <script src="./community.js"></script>
 </body>
 </html>
