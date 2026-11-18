@@ -34,3 +34,7 @@ jobs:
         run: node --test scripts/mobile-home.test.mjs
       - name: Check editorial design and readable mobile controls
         run: node --test scripts/editorial-ui.test.mjs
+      - name: Test fullscreen map search and verified pins
+        run: |
+          node --check interactive-map.js
+          node --test scripts/map-screen.test.mjs
