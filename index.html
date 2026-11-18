@@ -238,6 +238,76 @@
       .share-home-cta .btn{width:100%}
     }
 
+  
+    /* in-app food map (Leaflet + OSM) */
+    .map-v4{color:var(--fg);padding-bottom:18px}
+    .map-main-header{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:18px;margin:0 0 14px}
+    .map-main-header h1{font-size:22px;margin:6px 0;font-weight:850;letter-spacing:-.03em;color:var(--fg);line-height:1.35}
+    .map-main-header p{color:var(--muted);font-size:13px;line-height:1.55;margin:0}
+    .map-cuisine,.map-controls,.map-pin-register,.map-results{background:var(--panel);border:1px solid var(--border);border-radius:16px;margin-bottom:13px;padding:15px;box-shadow:var(--soft-shadow)}
+    .map-title-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+    .map-title-row strong{font-size:14px;font-weight:790;color:var(--fg)}
+    .map-title-row small,.map-tiny{color:var(--muted);font-size:11px;line-height:1.6}
+    .map-chip-row{display:flex;overflow-x:auto;gap:7px;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 1px 8px}
+    .map-chip-row::-webkit-scrollbar{display:none}
+    .map-chip-row button{flex:0 0 auto;white-space:nowrap;min-height:40px;padding:9px 12px;border:1px solid var(--border);border-radius:99px;background:var(--panel2);color:var(--fg);font-size:12px;font-weight:710}
+    .map-chip-row button.active{background:var(--fg);border-color:var(--fg);color:var(--bg)}
+    .map-control-buttons{display:flex;align-items:stretch;gap:7px;flex-wrap:wrap}
+    .map-control-buttons select,.map-control-buttons input{flex:1;min-width:115px;min-height:44px;font-size:12px}
+    .map-control-buttons .btn{min-height:44px;font-size:12px}
+    .map-controls .map-tiny{margin:10px 0 0}
+    .map-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--panel2);border:1px solid var(--border);padding:5px;border-radius:13px;margin-bottom:8px}
+    .map-tabs button{border:0;background:transparent;border-radius:10px;min-height:43px;color:var(--muted);font-weight:770;font-size:12px}
+    .map-tabs button.active{background:var(--panel);color:var(--fg);box-shadow:var(--soft-shadow)}
+    .map-legend{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:11px;margin:8px 0}
+    .map-legend span{display:flex;align-items:center;gap:5px}
+    .map-legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+    .map-legend .visited{background:#12a48c}.map-legend .wish{background:#e54875}.map-legend .nearby{background:#7688b9}
+    .map-legend select{margin-left:auto;min-height:36px;padding:4px 9px;font-size:12px;width:auto}
+    #tglRealMap{height:min(55vh,490px);min-height:330px;border-radius:16px;overflow:hidden;border:1px solid var(--border);z-index:1;background:var(--panel2)}
+    .tgl-pin-anchor{background:transparent;border:0}
+    .tgl-pin-dot{display:block;width:23px;height:23px;border-radius:50% 50% 50% 3px;transform:rotate(-45deg);border:3px solid #ffffff;box-shadow:0 2px 8px #0005}
+    .tgl-pin-dot.visited{background:#10a58a}.tgl-pin-dot.wish{background:#e74276}.tgl-pin-dot.nearby{background:#637bb9}
+    .tgl-map-popup{color:#202128;min-width:175px;max-width:245px}
+    .tgl-map-popup b{display:block;font-size:14px;font-weight:820;line-height:1.5}
+    .tgl-map-popup small{display:block;color:#656b76;font-size:11px;margin:4px 0 8px}
+    .tgl-map-popup p{font-size:12px;color:#464953;line-height:1.5}
+    .tgl-map-popup .inline-links{display:flex;gap:6px;margin:7px 0}
+    .tgl-map-popup .btn{font-size:11px;min-height:36px;padding:6px 8px}
+    .map-result-notice{background:var(--panel2);border-left:3px solid var(--accent);padding:10px 12px;color:var(--fg);border-radius:6px;font-size:12px;line-height:1.6;margin:10px 0}
+    .map-count{color:var(--muted);font-size:11px;margin:10px 0 18px}
+    .map-pin-register h2{font-size:15px;font-weight:810;color:var(--fg);margin:0 0 7px}
+    .map-pin-register p{color:var(--muted);font-size:12px;line-height:1.65}
+    .map-pin-register select{flex:1;min-width:170px}
+    .map-pin-register .map-tiny{margin-top:10px}
+    .map-geocodes{border:1px solid var(--border);background:var(--panel2);border-radius:12px;padding:12px;margin-top:13px}
+    .map-geocodes>strong{font-size:12px;color:var(--fg)}
+    .map-geo-option{display:flex;justify-content:space-between;gap:8px;align-items:center;border-bottom:1px solid var(--border);padding:9px 0}
+    .map-geo-option span{font-size:11px;color:var(--fg);flex:1;overflow-wrap:anywhere}
+    .map-geo-option .btn{min-height:35px}
+    .map-pending{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:12px;display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+    .map-pending strong{font-size:13px;color:var(--fg)}.map-pending span{font-size:11px;color:var(--muted);margin-right:auto}
+    .map-pending .btn{min-height:39px;font-size:12px}
+    .map-results strong{font-size:14px}.map-found{display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid var(--border);padding:11px 0}
+    .map-found b{font-size:12px;display:block;color:var(--fg);font-weight:750}
+    .map-found small{display:block;color:var(--muted);font-size:10px;line-height:1.4;margin-top:4px}
+    .map-found .inline-links{flex-shrink:0;gap:5px}.map-found .btn{min-height:34px;padding:5px 8px;font-size:11px}
+    .map-unavailable{padding:24px;color:var(--muted);line-height:1.65;font-size:13px}
+    .map-fallback{border:1px solid var(--border);background:var(--panel);border-radius:14px;margin:12px 0;padding:13px}
+    .map-fallback summary{cursor:pointer;color:var(--fg);font-size:12px;font-weight:800;padding:5px}
+    .map-fallback p{font-size:12px;color:var(--muted)}
+    .map-credit{font-size:10px;line-height:1.7;color:var(--muted);margin-top:15px}
+    .map-credit a{text-decoration:underline;color:var(--accent)}
+    @media(max-width:760px){
+      .map-main-header{padding:16px}.map-main-header h1{font-size:20px}
+      .map-cuisine,.map-controls,.map-pin-register,.map-results{padding:12px}
+      #tglRealMap{height:47vh;min-height:310px}
+      .map-control-buttons .btn{flex:1;min-width:130px}
+      .map-found{align-items:stretch;flex-wrap:wrap}
+      .map-found .inline-links{width:100%;justify-content:flex-end}
+      .map-legend{gap:8px}
+    }
+
   </style>
 </head>
 <body>
@@ -387,5 +457,6 @@
   </script>
   <script src="./discovery.js"></script>
   <script src="./community.js"></script>
+  <script src="./interactive-map.js"></script>
 </body>
 </html>
